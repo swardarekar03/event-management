@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import HeroImage from "./assets/HeroImage.png";
 
 const NAV_LINKS = ["Home", "Events", "Contact"];
 
 export default function App() {
+  const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -108,6 +110,48 @@ export default function App() {
               </li>
             ))}
           </ul>
+
+          <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+            <Link 
+              to="/login" 
+              style={{
+                fontSize: 14, 
+                fontWeight: 600,
+                color: "#44403c", 
+                textDecoration: "none",
+                transition: "color 0.2s",
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = "#ea580c"}
+              onMouseLeave={e => e.currentTarget.style.color = "#44403c"}
+            >
+              Login
+            </Link>
+            <Link 
+              to="/signup" 
+              style={{
+                padding: "8px 18px",
+                background: "#9333ea",
+                color: "#fff",
+                fontSize: 14, 
+                fontWeight: 600,
+                border: "none", 
+                borderRadius: 8,
+                cursor: "pointer",
+                textDecoration: "none",
+                transition: "transform 0.2s, background-color 0.2s",
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = "#7e22ce";
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = "#9333ea";
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
+            >
+              Sign Up
+            </Link>
+          </div>
         </nav>
 
         {/* ── CONTENT ── */}
@@ -160,6 +204,7 @@ export default function App() {
             {/* Buttons */}
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               <button
+                onClick={() => navigate("/events")}
                 onMouseEnter={e => {
                   e.currentTarget.style.transform = "translateY(-2px)";
                   e.currentTarget.style.boxShadow = "0 8px 28px rgba(234,88,12,0.4)";
