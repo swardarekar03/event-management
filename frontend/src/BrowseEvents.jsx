@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import "./BrowseEvents.css";
 
 const categories = ["Concerts", "Business", "Food", "Creative", "Comedy", "Sports"];
@@ -143,8 +144,8 @@ export default function BrowseEvents({ onBackHome }) {
             </div>
           </div>
           <a href="#upcoming">Upcoming Events</a>
-          <a href="#login">Login</a>
-          <a className="signup-link" href="#signup">Sign Up</a>
+          <Link to="/login">Login</Link>
+          <Link className="signup-link" to="/signup">Sign Up</Link>
         </div>
       </nav>
 

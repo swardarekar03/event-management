@@ -93,7 +93,7 @@ export default function App() {
             letterSpacing: "-0.3px",
           }}>NexEvent</span>
 
-          <ul style={{
+          {/* <ul style={{
             display: "flex", gap: 40,
             listStyle: "none", margin: 0, padding: 0,
           }}>
@@ -109,10 +109,10 @@ export default function App() {
                 >{l}</a>
               </li>
             ))}
-          </ul>
+          </ul> */}
 
           <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
-            <Link 
+            {/* <Link 
               to="/login" 
               style={{
                 fontSize: 14, 
@@ -125,8 +125,8 @@ export default function App() {
               onMouseLeave={e => e.currentTarget.style.color = "#44403c"}
             >
               Login
-            </Link>
-            <Link 
+            </Link> */}
+            {/* <Link 
               to="/signup" 
               style={{
                 padding: "8px 18px",
@@ -150,7 +150,7 @@ export default function App() {
               }}
             >
               Sign Up
-            </Link>
+            </Link> */}
           </div>
         </nav>
 
