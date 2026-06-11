@@ -42,7 +42,7 @@ export default function Login() {
       localStorage.setItem("user", JSON.stringify(data.user));
 
       setLoading(false);
-      navigate("/");
+      navigate("/userDashboard");
     } catch (err) {
       setLoading(false);
       setError(err.message);

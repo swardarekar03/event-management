@@ -49,7 +49,7 @@ export default function Signup() {
       localStorage.setItem("user", JSON.stringify(data.user));
 
       setLoading(false);
-      navigate("/");
+      navigate("/userDashboard");
     } catch (err) {
       setLoading(false);
       setError(err.message);
