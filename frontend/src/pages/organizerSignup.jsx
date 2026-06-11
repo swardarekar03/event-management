@@ -71,7 +71,7 @@ export default function OrganizerSignup() {
     setStep((prev) => prev - 1);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -80,19 +80,53 @@ export default function OrganizerSignup() {
     }
 
     setLoading(true);
-    // Simulate API request
-    setTimeout(() => {
+    try {
+      const response = await fetch("http://localhost:5000/api/organizers/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName,
+          orgName,
+          email,
+          phone,
+          password,
+          address,
+          city,
+          state,
+          country,
+          pincode,
+          idType,
+          idNumber,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Something went wrong during signup.");
+      }
+
+      // Save credentials in local storage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.organizer));
+
       setLoading(false);
       setSuccess(true);
       setTimeout(() => {
         navigate("/login");
       }, 2500);
-    }, 1500);
+    } catch (err) {
+      setLoading(false);
+      setError(err.message);
+    }
   };
 
   return (
     <div className="org-signup-container">
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .org-signup-container {
           display: flex;
           min-height: 100vh;
@@ -399,14 +433,14 @@ export default function OrganizerSignup() {
 
           {!success && (
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-              
+
               {/* STEP 1: Account Information */}
               {step === 1 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                   <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#1c1917", margin: "0 0 4px 0", borderBottom: "1.5px solid #f2f0f5", paddingBottom: "6px" }}>
                     Account Information
                   </h3>
-                  
+
                   <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                     <label style={{ fontSize: "13px", fontWeight: 600, color: "#1c1917" }}>Full Name</label>
                     <input
@@ -718,7 +752,7 @@ export default function OrganizerSignup() {
                     Back
                   </button>
                 )}
-                
+
                 {step < 3 ? (
                   <button
                     type="button"
@@ -745,6 +779,7 @@ export default function OrganizerSignup() {
                 ) : (
                   <button
                     type="submit"
+                    onClick={() => navigate("/organizerpanel")}
                     disabled={loading}
                     onMouseEnter={() => setBtnHover(true)}
                     onMouseLeave={() => setBtnHover(false)}
