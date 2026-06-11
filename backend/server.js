@@ -7,6 +7,8 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./src/routes/auth.js";
+import ticketRoutes from "./src/routes/tickets.js";
+import eventRoutes from "./src/routes/events.js";  
 
 // Load environment variables
 dotenv.config();
@@ -23,6 +25,9 @@ app.use(express.json());
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/tickets", ticketRoutes);
+app.use("/api/events", eventRoutes);       
+
 
 // Base route
 app.get("/", (req, res) => {
