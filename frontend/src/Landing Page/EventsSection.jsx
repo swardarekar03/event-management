@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { CalendarDays, MapPin, Ticket, Users } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import "./EventsSection.css";
 import musicev from "../assets/musical-ev.png";
 import workshopev from "../assets/workshop.png";
@@ -112,117 +114,132 @@ const allEvents = [
 ];
 
 export default function EventsSection() {
+    const navigate = useNavigate();
     const [selectedCategory, setSelectedCategory] = useState("all");
 
-    // Filter events based on selected category
-    const filteredEvents = selectedCategory === "all" 
-        ? allEvents 
-        : allEvents.filter(event => event.category === selectedCategory);
+    const filteredEvents = selectedCategory === "all"
+        ? allEvents
+        : allEvents.filter((event) => event.category === selectedCategory);
 
     const handleCategoryClick = (categoryType) => {
         setSelectedCategory(categoryType);
     };
 
     return (
-        <div className="events-container">
-            {/* Categories as Inline Filters */}
-            <div className="filters-wrapper">
-                <div className="filters-header">
-                    <h2>Discover Events</h2>
-                    <p>Find the perfect event that matches your interest</p>
+        <main className="events-section-page">
+            <nav className="events-section-nav">
+                <button className="events-section-brand" onClick={() => navigate("/events")} type="button">
+                    NexEvent
+                </button>
+
+                <div className="events-section-nav-links">
+                    <Link to="/events">Browse Events</Link>
+                    <a href="#categories">Categories</a>
+                    <a href="#events">Upcoming Events</a>
+                    <Link to="/login">Login</Link>
+                    <Link className="events-section-signup" to="/signup">Sign Up</Link>
                 </div>
-                
+            </nav>
+
+            <section className="events-section-hero">
+                <p className="events-section-kicker">Discover Events</p>
+                <h1>Discover Events</h1>
+                <p>Find the perfect event that matches your interest</p>
+            </section>
+
+            <section className="events-section-content" id="categories">
                 <div className="categories-filter">
-                    <button 
+                    <button
                         className={`filter-chip ${selectedCategory === "all" ? "active" : ""}`}
                         onClick={() => handleCategoryClick("all")}
+                        type="button"
                     >
-                        {/* <span className="chip-icon">🎯</span> */}
                         All Events
                     </button>
-                    
+
                     {categories.map((category) => (
-                        <button 
-                            key={category.id} 
+                        <button
+                            key={category.id}
                             className={`filter-chip ${selectedCategory === category.type ? "active" : ""}`}
                             onClick={() => handleCategoryClick(category.type)}
+                            type="button"
                         >
                             <img src={category.icon} alt={category.name} className="chip-icon-img" />
                             {category.name}
                         </button>
                     ))}
                 </div>
-            </div>
 
-            {/* Results Stats */}
-            <div className="results-stats">
-                <span className="events-count">{filteredEvents.length} Events Found</span>
-                {selectedCategory !== "all" && (
-                    <button 
-                        className="clear-filter"
-                        onClick={() => handleCategoryClick("all")}
-                    >
-                        Clear Filter ✕
-                    </button>
-                )}
-            </div>
-
-            {/* Events Grid with Fixed Size Cards */}
-            <div className="events-grid">
-                {filteredEvents.map((event) => (
-                    <div key={event.id} className="event-card">
-                        <div className="card-image-wrapper">
-                            <img
-                                src={event.image}
-                                alt={event.title}
-                                className="event-image"
-                            />
-                            <div className="card-badge">{event.category}</div>
-                        </div>
-                        
-                        <div className="event-content">
-                            <div className="event-header">
-                                <h3>{event.title}</h3>
-                                <span className="event-price">{event.price}</span>
-                            </div>
-                            
-                            <div className="event-details">
-                                <div className="detail-item">
-                                    <span className="detail-icon">Date:</span>
-                                    <span>{event.date}</span>
-                                </div>
-                                <div className="detail-item">
-                                    <span className="detail-icon">Loaction:</span>
-                                    <span>{event.location}</span>
-                                </div>
-                                <div className="detail-item">
-                                    <span className="detail-icon">Attendies</span>
-                                    <span>{event.attendees} attending</span>
-                                </div>
-                            </div>
-                            
-                            <button className="register-btn">
-                                Register Now →
-                            </button>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* No Events State */}
-            {filteredEvents.length === 0 && (
-                <div className="no-events">
-                    <div className="no-events-icon">🔍</div>
-                    <h3>No events found</h3>
-                    <p>We couldn't find any events in this category</p>
-                    <button 
-                        className="view-all-btn"
-                        onClick={() => handleCategoryClick("all")}
-                    >
-                        View All Events
-                    </button>
+                <div className="results-stats" id="events">
+                    <span className="events-count">{filteredEvents.length} Events Found</span>
+                    {selectedCategory !== "all" && (
+                        <button
+                            className="clear-filter"
+                            onClick={() => handleCategoryClick("all")}
+                            type="button"
+                        >
+                            Clear Filter ✕
+                        </button>
+                    )}
                 </div>
-            )}
-        </div>
+
+                <div className="events-grid">
+                    {filteredEvents.map((event) => (
+                        <article key={event.id} className="section-event-card">
+                            <div className="card-image-wrapper">
+                                <img
+                                    src={event.image}
+                                    alt={event.title}
+                                    className="event-image"
+                                />
+                                <div className="card-badge">{event.category}</div>
+                            </div>
+
+                            <div className="event-content">
+                                <div className="event-header">
+                                    <h3>{event.title}</h3>
+                                    <span className="event-price">{event.price}</span>
+                                </div>
+
+                                <div className="event-details">
+                                    <div className="detail-item">
+                                        <CalendarDays size={15} />
+                                        <span>{event.date}</span>
+                                    </div>
+                                    <div className="detail-item">
+                                        <MapPin size={15} />
+                                        <span>{event.location}</span>
+                                    </div>
+                                    <div className="detail-item">
+                                        <Users size={15} />
+                                        <span>{event.attendees} attending</span>
+                                    </div>
+                                </div>
+
+                                <button className="register-btn" type="button">
+                                    <Ticket size={16} />
+                                    Register Now →
+                                </button>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+
+                {filteredEvents.length === 0 && (
+                    <div className="no-events">
+                        <div className="no-events-icon">🔍</div>
+                        <h3>No events found</h3>
+                        <p>We couldn't find any events in this category</p>
+                        <button
+                            className="view-all-btn"
+                            onClick={() => handleCategoryClick("all")}
+                            type="button"
+                        >
+                            View All Events
+                        </button>
+                    </div>
+                )}
+            </section>
+        </main>
     );
 }

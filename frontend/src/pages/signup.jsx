@@ -93,7 +93,7 @@ export default function Signup() {
       <div className="form-panel">
         <div className="form-card">
           <div style={{ marginBottom: "20px" }}>
-            <Link to="/" style={{ color: "#57534e", textDecoration: "none", fontSize: "14px", fontWeight: 500 }}>
+            <Link to="/events" style={{ color: "#57534e", textDecoration: "none", fontSize: "14px", fontWeight: 500 }}>
               ← Back to Home
             </Link>
           </div>

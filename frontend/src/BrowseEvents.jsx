@@ -10,10 +10,8 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./BrowseEvents.css";
-
-const categories = ["Concerts", "Business", "Food", "Creative", "Comedy", "Sports"];
 
 const events = [
   {
@@ -109,6 +107,7 @@ const featuredRows = [
 ];
 
 export default function BrowseEvents({ onBackHome }) {
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
 
@@ -132,17 +131,10 @@ export default function BrowseEvents({ onBackHome }) {
 
         <div className="browse-nav-links">
           <a href="#about">About Us</a>
-          <div className="category-menu">
-            <button type="button">
-              Categories
-              <ChevronDown size={16} />
-            </button>
-            <div className="category-dropdown">
-              {categories.map((category) => (
-                <a href={`#${category.toLowerCase()}`} key={category}>{category}</a>
-              ))}
-            </div>
-          </div>
+          <button className="category-nav-button" onClick={() => navigate("/event-section")} type="button">
+            Categories
+            <ChevronDown size={16} />
+          </button>
           <a href="#upcoming">Upcoming Events</a>
           <Link to="/login">Login</Link>
           <Link className="signup-link" to="/signup">Sign Up</Link>
@@ -251,7 +243,7 @@ export default function BrowseEvents({ onBackHome }) {
                   <span>Ticket price</span>
                   <strong>{selectedEvent.price}</strong>
                 </div>
-                <button type="button">
+                <button onClick={() => navigate("/signup")} type="button">
                   <Ticket size={18} />
                   Book Ticket
                 </button>

@@ -3,6 +3,7 @@ import NexEvent from "./NexEvent";
 import BrowseEvents from "./BrowseEvents";
 import Login from "./pages/login";
 import Signup from "./pages/signup";
+import EventsSection from "./Landing Page/EventsSection";
 
 function AppRoutes() {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<NexEvent />} />
       <Route path="/events" element={<BrowseEvents onBackHome={() => navigate("/")} />} />
+      <Route path="/event-section" element={<EventsSection />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
     </Routes>
