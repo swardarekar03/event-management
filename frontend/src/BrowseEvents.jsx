@@ -102,7 +102,6 @@ export default function BrowseEvents({ onBackHome }) {
         </button>
 
         <div className="browse-nav-links">
-          <a href="#about">About Us</a>
           <button className="category-nav-button" onClick={() => navigate("/event-section")} type="button">
             Categories
             <ChevronDown size={16} />

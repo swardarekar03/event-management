@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 
 const sidebarItems = [
   { id: "dashboard", label: "Dashboard" },
@@ -492,14 +493,14 @@ const views = {
 const NavIcon = ({ id, active }) => {
   const color = active ? C.orange : "#999";
   const icons = {
-    dashboard: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill={color}/><rect x="9" y="1" width="6" height="6" rx="1.5" fill={color}/><rect x="1" y="9" width="6" height="6" rx="1.5" fill={color}/><rect x="9" y="9" width="6" height="6" rx="1.5" fill={color}/></svg>,
-    events: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="12" rx="2" stroke={color} strokeWidth="1.5"/><path d="M5 1v4M11 1v4M1 7h14" stroke={color} strokeWidth="1.5" strokeLinecap="round"/></svg>,
-    registrations: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke={color} strokeWidth="1.5"/><path d="M2 14c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke={color} strokeWidth="1.5" strokeLinecap="round"/></svg>,
-    qr: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke={color} strokeWidth="1.5"/><rect x="10" y="1" width="5" height="5" rx="1" stroke={color} strokeWidth="1.5"/><rect x="1" y="10" width="5" height="5" rx="1" stroke={color} strokeWidth="1.5"/><path d="M10 10h5M13 13v2M10 13h2" stroke={color} strokeWidth="1.5" strokeLinecap="round"/></svg>,
-    notifications: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2a5 5 0 00-5 5v3l-1 2h12l-1-2V7a5 5 0 00-5-5z" stroke={color} strokeWidth="1.5"/><path d="M6.5 13.5a1.5 1.5 0 003 0" stroke={color} strokeWidth="1.5"/></svg>,
-    gallery: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="2" stroke={color} strokeWidth="1.5"/><circle cx="5.5" cy="7" r="1.5" fill={color}/><path d="M2 13l4-4 3 3 2-2 3 3" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-    feedback: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2l1.5 3.5 3.5.5-2.5 2.5.5 3.5L8 10.5 5 12l.5-3.5L3 6l3.5-.5L8 2z" stroke={color} strokeWidth="1.5" strokeLinejoin="round"/></svg>,
-    profile: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke={color} strokeWidth="1.5"/><path d="M2 14c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke={color} strokeWidth="1.5" strokeLinecap="round"/></svg>,
+    dashboard: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill={color} /><rect x="9" y="1" width="6" height="6" rx="1.5" fill={color} /><rect x="1" y="9" width="6" height="6" rx="1.5" fill={color} /><rect x="9" y="9" width="6" height="6" rx="1.5" fill={color} /></svg>,
+    events: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="12" rx="2" stroke={color} strokeWidth="1.5" /><path d="M5 1v4M11 1v4M1 7h14" stroke={color} strokeWidth="1.5" strokeLinecap="round" /></svg>,
+    registrations: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke={color} strokeWidth="1.5" /><path d="M2 14c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke={color} strokeWidth="1.5" strokeLinecap="round" /></svg>,
+    qr: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke={color} strokeWidth="1.5" /><rect x="10" y="1" width="5" height="5" rx="1" stroke={color} strokeWidth="1.5" /><rect x="1" y="10" width="5" height="5" rx="1" stroke={color} strokeWidth="1.5" /><path d="M10 10h5M13 13v2M10 13h2" stroke={color} strokeWidth="1.5" strokeLinecap="round" /></svg>,
+    notifications: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2a5 5 0 00-5 5v3l-1 2h12l-1-2V7a5 5 0 00-5-5z" stroke={color} strokeWidth="1.5" /><path d="M6.5 13.5a1.5 1.5 0 003 0" stroke={color} strokeWidth="1.5" /></svg>,
+    gallery: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="2" stroke={color} strokeWidth="1.5" /><circle cx="5.5" cy="7" r="1.5" fill={color} /><path d="M2 13l4-4 3 3 2-2 3 3" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>,
+    feedback: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2l1.5 3.5 3.5.5-2.5 2.5.5 3.5L8 10.5 5 12l.5-3.5L3 6l3.5-.5L8 2z" stroke={color} strokeWidth="1.5" strokeLinejoin="round" /></svg>,
+    profile: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke={color} strokeWidth="1.5" /><path d="M2 14c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke={color} strokeWidth="1.5" strokeLinecap="round" /></svg>,
   };
   return icons[id] || null;
 };
@@ -508,6 +509,10 @@ export default function OrganizerPanel() {
   const [active, setActive] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const ActiveView = views[active];
+
+  const NexEventPage = () => {
+    window.location.href = "/";
+  };
 
   return (
     <div style={{ display: "flex", height: "100vh", background: C.lightGray, fontFamily: "'Inter', 'Helvetica Neue', sans-serif", overflow: "hidden" }}>
@@ -550,10 +555,12 @@ export default function OrganizerPanel() {
           }}
             onMouseEnter={e => { e.currentTarget.style.color = "#FF6B6B"; e.currentTarget.style.background = "rgba(255,100,100,0.08)"; }}
             onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; e.currentTarget.style.background = "transparent"; }}
+
+            onClick={NexEventPage}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-              <path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              <path d="M10 11l3-3-3-3M13 8H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M10 11l3-3-3-3M13 8H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             {sidebarOpen && <span>Logout</span>}
           </button>
@@ -566,7 +573,7 @@ export default function OrganizerPanel() {
         <header style={{ background: C.white, borderBottom: `1px solid ${C.border}`, padding: "0 24px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
           <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", cursor: "pointer", padding: 8, borderRadius: 8, color: C.midGray, display: "flex", alignItems: "center" }}>
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+              <path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
