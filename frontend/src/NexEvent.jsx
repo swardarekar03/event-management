@@ -227,28 +227,31 @@ export default function App() {
                 Browse Events
               </button>
 
-              <button
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = "rgba(147,51,234,0.07)";
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.transform = "translateY(0)";
-                }}
-                style={{
-                  padding: "12px 28px",
-                  backgroundColor: "transparent",
-                  color: "#9333ea",
-                  fontSize: 14, fontWeight: 600,
-                  border: "1.5px solid rgba(147,51,234,0.35)",
-                  borderRadius: 10,
-                  cursor: "pointer",
-                  transition: "background 0.2s, transform 0.2s",
-                  letterSpacing: "0.1px",
-                }}>
-                Organize Event
-              </button>
+             <button
+  onClick={() => navigate("/organizer-signup")}
+  onMouseEnter={e => {
+    e.currentTarget.style.background = "rgba(147,51,234,0.07)";
+    e.currentTarget.style.transform = "translateY(-2px)";
+  }}
+  onMouseLeave={e => {
+    e.currentTarget.style.background = "transparent";
+    e.currentTarget.style.transform = "translateY(0)";
+  }}
+  style={{
+    padding: "12px 28px",
+    backgroundColor: "transparent",
+    color: "#9333ea",
+    fontSize: 14,
+    fontWeight: 600,
+    border: "1.5px solid rgba(147,51,234,0.35)",
+    borderRadius: 10,
+    cursor: "pointer",
+    transition: "background 0.2s, transform 0.2s",
+    letterSpacing: "0.1px",
+  }}
+>
+  Organize Event
+</button>
             </div>
 
             {/* Social proof */}
