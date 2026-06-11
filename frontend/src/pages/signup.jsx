@@ -19,7 +19,7 @@ export default function Signup() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -29,10 +29,31 @@ export default function Signup() {
     if (password !== confirmPassword) return setError("Passwords do not match.");
 
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Something went wrong during signup.");
+      }
+
+      // Save credentials in local storage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
       setLoading(false);
-      navigate("/login");
-    }, 1000);
+      navigate("/");
+    } catch (err) {
+      setLoading(false);
+      setError(err.message);
+    }
   };
 
   return (

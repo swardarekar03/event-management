@@ -14,7 +14,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -22,10 +22,31 @@ export default function Login() {
     if (!/\S+@\S+\.\S+/.test(email)) return setError("Invalid email address.");
 
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Invalid credentials.");
+      }
+
+      // Save credentials in local storage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
       setLoading(false);
       navigate("/");
-    }, 1000);
+    } catch (err) {
+      setLoading(false);
+      setError(err.message);
+    }
   };
 
   return (
