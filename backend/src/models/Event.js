@@ -43,6 +43,16 @@ const EventSchema = new mongoose.Schema({
     default: 0,
     min: 0
   },
+  organizerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Organizer",
+    required: true,
+  },
+  organizerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Organizer",
+    required: true,
+  },
   organizer: {
     name: String
   },
@@ -54,7 +64,12 @@ const EventSchema = new mongoose.Schema({
   image: {
     type: String,
     default: ""
-  }
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 },
   { timestamps: true }
 );

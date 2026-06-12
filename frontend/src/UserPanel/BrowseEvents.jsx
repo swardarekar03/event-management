@@ -78,7 +78,6 @@ export default function BrowseEvents() {
     }
   };
 
-  // ✅ No <main>, no <nav>, no <footer> — UserDashboard provides those
   return (
     <>
       <section className="browse-hero">

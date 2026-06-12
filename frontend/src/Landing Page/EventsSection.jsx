@@ -218,7 +218,7 @@ export default function EventsSection() {
 
                                 <button className="register-btn" type="button">
                                     <Ticket size={16} />
-                                    Register Now →
+                                    <Link to="/login">Register Now →</Link>
                                 </button>
                             </div>
                         </article>
