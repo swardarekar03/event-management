@@ -8,6 +8,15 @@ const EventSchema = new mongoose.Schema({
   },
   category: {
     type: String,
+    enum: [
+      "Technology",
+      "Workshop",
+      "Sports",
+      "Cultural",
+      "Business",
+      "Music",
+      "Other"
+    ],
     required: true
   },
   date: {
@@ -22,10 +31,17 @@ const EventSchema = new mongoose.Schema({
   price: {
     type: Number,
     required: true,
+    min: 0
+  },
+  totalTickets: {
+    type: Number,
+    required: true,
+    min: 0
   },
   availableTickets: {
     type: Number,
     default: 0,
+    min: 0
   },
   organizer: {
     name: String
@@ -34,6 +50,10 @@ const EventSchema = new mongoose.Schema({
     type: String,
     enum: ["pending", "approved", "rejected"],
     default: "pending"
+  },
+  image: {
+    type: String,
+    default: ""
   }
 },
   { timestamps: true }

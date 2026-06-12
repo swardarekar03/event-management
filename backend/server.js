@@ -11,6 +11,7 @@ import authRoutes from "./src/routes/auth.js";
 import ticketRoutes from "./src/routes/tickets.js";
 import eventRoutes from "./src/routes/eventRoute.js";  
 import organizerRoutes from "./src/routes/organizers.js";
+import registerRotes from "./src/routes/registerRotes.js";
 
 // Load environment variables
 dotenv.config();
@@ -30,6 +31,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/events", eventRoutes);       
 app.use("/api/organizers", organizerRoutes);
+app.use("/api/registerations", registerRotes);
 
 
 // Base route
