@@ -10,9 +10,9 @@ import {
 const router = express.Router();
 
 router.post("/create-event", createEvent);
-router.get("/", getEvents); 
-router.get("/event-by-id", singleEvent);
-router.put("/updated-event", updateEvent);
-router.delete("/deleted-event", deleteEvent);
+router.get("/get-events", getEvents); 
+router.get("/get-event/:id", singleEvent);
+router.put("/update-event/:id", updateEvent);
+router.delete("/delete-event/:id", deleteEvent);
 
 export default router;

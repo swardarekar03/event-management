@@ -155,47 +155,96 @@ function Card({ children, style }) {
   );
 }
 
-// ── DASHBOARD ──
+// ── DASHBOARD (UPDATED) ──
 function Dashboard({ events = [] }) {
-  const eventCount = events && Array.isArray(events) ? events.length : 0;
+  const eventCount = events.length;
   
   // Calculate statistics from actual events
-  const totalRegistrations = events.reduce((sum, event) => sum + (event.registered || event.availableTickets || 0), 0);
-  const totalSeats = events.reduce((sum, event) => sum + (event.seats || event.availableTickets || 0), 0);
-  const availableSeats = totalSeats - totalRegistrations;
+  const totalRegistrations = events.reduce((sum, event) => {
+    const registered = event.totalTickets - event.availableTickets;
+    return sum + (registered > 0 ? registered : 0);
+  }, 0);
+  
+  const totalSeats = events.reduce((sum, event) => sum + (event.totalTickets || 0), 0);
+  const availableSeats = events.reduce((sum, event) => sum + (event.availableTickets || 0), 0);
+  
+  // Get upcoming events (date >= today)
+  const today = new Date();
+  const upcomingEvents = events.filter(event => new Date(event.date) >= today);
+  const completedEvents = events.filter(event => new Date(event.date) < today);
   
   return (
     <div>
       <PageHeader title="Dashboard" sub="Welcome back. Here's what's happening." />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
-        <StatCard key="total-events" label="Total Events" value={eventCount.toString()} sub="All time" accent />
-        <StatCard key="registrations" label="Registrations" value={totalRegistrations.toString()} sub="Across all events" />
-        <StatCard key="seats" label="Available Seats" value={availableSeats.toString()} sub="Remaining capacity" />
-        <StatCard key="rating" label="Avg. Rating" value="4.0" sub="From 3 reviews" />
+        <StatCard label="Total Events" value={eventCount.toString()} sub="All time" accent />
+        <StatCard label="Total Registrations" value={totalRegistrations.toString()} sub="Across all events" />
+        <StatCard label="Available Seats" value={availableSeats.toString()} sub="Remaining capacity" />
+        <StatCard label="Total Capacity" value={totalSeats.toString()} sub="Overall seats" />
       </div>
+      
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 32 }}>
+        <div>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: C.black, marginBottom: 12 }}>Upcoming Events ({upcomingEvents.length})</h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {upcomingEvents.slice(0, 3).map(ev => (
+              <Card key={ev._id} style={{ padding: "12px 16px" }}>
+                <p style={{ fontWeight: 700, fontSize: 13, margin: 0 }}>{ev.title}</p>
+                <p style={{ fontSize: 11, color: "#999", marginTop: 2 }}>
+                  {new Date(ev.date).toLocaleDateString()} · {ev.venue}
+                </p>
+              </Card>
+            ))}
+          </div>
+        </div>
+        
+        <div>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: C.black, marginBottom: 12 }}>Completed Events ({completedEvents.length})</h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {completedEvents.slice(0, 3).map(ev => (
+              <Card key={ev._id} style={{ padding: "12px 16px" }}>
+                <p style={{ fontWeight: 700, fontSize: 13, margin: 0 }}>{ev.title}</p>
+                <p style={{ fontSize: 11, color: "#999", marginTop: 2 }}>
+                  {new Date(ev.date).toLocaleDateString()}
+                </p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+      
       <h3 style={{ fontSize: 14, fontWeight: 700, color: C.black, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.08em" }}>Your Events</h3>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {events && events.length > 0 ? (
-          events.map(ev => (
-            <Card key={ev.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px 20px" }}>
-              <div>
-                <p style={{ fontWeight: 700, fontSize: 14, color: C.black, margin: 0 }}>{ev.title}</p>
-                <p style={{ fontSize: 12, color: "#999", marginTop: 3 }}>{ev.date} · {ev.category}</p>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0 }}>
-                <div style={{ textAlign: "right" }}>
-                  <p style={{ fontSize: 11, color: "#999" }}>Seats</p>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: C.black }}>{ev.registered || ev.availableTickets || 0}/{ev.seats || ev.availableTickets || 0}</p>
+        {events.length > 0 ? (
+          events.map(ev => {
+            const registered = ev.totalTickets - ev.availableTickets;
+            const percentage = (registered / ev.totalTickets) * 100;
+            
+            return (
+              <Card key={ev._id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px 20px" }}>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontWeight: 700, fontSize: 14, color: C.black, margin: 0 }}>{ev.title}</p>
+                  <p style={{ fontSize: 12, color: "#999", marginTop: 3 }}>
+                    {new Date(ev.date).toLocaleDateString()} · {ev.category}
+                  </p>
                 </div>
-                <div style={{ width: 80, background: C.lightGray, borderRadius: 99, height: 4 }}>
-                  <div style={{ background: C.orange, height: 4, borderRadius: 99, width: `${((ev.registered || ev.availableTickets || 0) / (ev.seats || ev.availableTickets || 1)) * 100}%` }} />
+                <div style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0 }}>
+                  <div style={{ textAlign: "right" }}>
+                    <p style={{ fontSize: 11, color: "#999" }}>Seats</p>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: C.black }}>
+                      {registered}/{ev.totalTickets}
+                    </p>
+                  </div>
+                  <div style={{ width: 80, background: C.lightGray, borderRadius: 99, height: 4 }}>
+                    <div style={{ background: C.orange, height: 4, borderRadius: 99, width: `${percentage}%` }} />
+                  </div>
+                  <Badge status={ev.status} />
                 </div>
-                <Badge status={ev.status || "upcoming"} />
-              </div>
-            </Card>
-          ))
+              </Card>
+            );
+          })
         ) : (
-          <Card key="no-events">
+          <Card>
             <p style={{ textAlign: "center", color: C.midGray, margin: 0 }}>No events found. Create your first event!</p>
           </Card>
         )}
@@ -204,147 +253,273 @@ function Dashboard({ events = [] }) {
   );
 }
 
-// ── EVENT MANAGEMENT ──
+// ── EVENT MANAGEMENT (UPDATED) ──
 function EventManagement({ events = [], setEvents, fetchEvents }) {
   const [showForm, setShowForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
   const [form, setForm] = useState({ 
     title: "", 
-    category: "", 
+    category: "Technology", 
     date: "", 
     venue: "", 
     price: "", 
-    availableTickets: "", 
-    organizer: "", 
-    status: "" 
+    totalTickets: "", 
+    availableTickets: "",
+    organizerName: "",
+    status: "pending",
+    image: ""
   });
+
+  // Map category options from schema
+  const categories = [
+    "Technology",
+    "Workshop",
+    "Sports",
+    "Cultural",
+    "Business",
+    "Music",
+    "Other"
+  ];
+
+  const statuses = ["pending", "approved", "rejected"];
 
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`http://localhost:${PORT}/api/events/create-event`, {
+      // Format the data according to your schema
+      const eventData = {
         title: form.title,
         category: form.category,
         date: form.date,
         venue: form.venue,
         price: Number(form.price),
+        totalTickets: Number(form.totalTickets),
         availableTickets: Number(form.availableTickets),
-        organizer: form.organizer,
-        status: form.status
-      });
+        organizer: { name: form.organizerName },
+        status: form.status,
+        image: form.image || ""
+      };
 
-      console.log("Created: ", res.data);
-      if (res.data && res.data.event) {
-        setEvents([...events, res.data.event]);
-      } else {
-        // Refresh events if response structure is different
-        fetchEvents();
+      const res = await axios.post(`http://localhost:${PORT}/api/events/create-event`, eventData);
+
+      if (res.data.success && res.data.event) {
+        await fetchEvents(); // Refresh the events list
+        resetForm();
+        setShowForm(false);
+        alert("Event created successfully!");
       }
-
-      setForm({
-        title: "",
-        category: "",
-        date: "",
-        venue: "",
-        price: "",
-        availableTickets: "",
-        organizer: "",
-        status: ""
-      });
-
-      setShowForm(false);
     }
     catch (error) {
-      console.log(error);
-      alert("Failed to create event");
+      console.error("Error creating event:", error);
+      alert(error.response?.data?.message || "Failed to create event");
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const eventData = {
+        title: form.title,
+        category: form.category,
+        date: form.date,
+        venue: form.venue,
+        price: Number(form.price),
+        totalTickets: Number(form.totalTickets),
+        availableTickets: Number(form.availableTickets),
+        organizer: { name: form.organizerName },
+        status: form.status,
+        image: form.image || ""
+      };
+
+      const res = await axios.put(`http://localhost:${PORT}/api/events/update-event/${editingEvent._id}`, eventData);
+
+      if (res.data.success) {
+        await fetchEvents();
+        resetForm();
+        setShowEditForm(false);
+        setEditingEvent(null);
+        alert("Event updated successfully!");
+      }
+    }
+    catch (error) {
+      console.error("Error updating event:", error);
+      alert(error.response?.data?.message || "Failed to update event");
     }
   };
 
   const handleDelete = async (eventId) => {
+    if (!window.confirm("Are you sure you want to delete this event?")) return;
+    
     try {
       await axios.delete(`http://localhost:${PORT}/api/events/delete-event/${eventId}`);
-      setEvents(events.filter(e => e.id !== eventId));
+      await fetchEvents(); // Refresh the events list
+      alert("Event deleted successfully!");
     } catch (error) {
-      console.log("Error deleting event:", error);
-      alert("Failed to delete event");
+      console.error("Error deleting event:", error);
+      alert(error.response?.data?.message || "Failed to delete event");
     }
+  };
+
+  const handleEdit = (event) => {
+    setEditingEvent(event);
+    setForm({
+      title: event.title || "",
+      category: event.category || "Technology",
+      date: event.date ? new Date(event.date).toISOString().split('T')[0] : "",
+      venue: event.venue || "",
+      price: event.price?.toString() || "",
+      totalTickets: event.totalTickets?.toString() || "",
+      availableTickets: event.availableTickets?.toString() || "",
+      organizerName: event.organizer?.name || "",
+      status: event.status || "pending",
+      image: event.image || ""
+    });
+    setShowEditForm(true);
+    setShowForm(false);
+  };
+
+  const resetForm = () => {
+    setForm({
+      title: "",
+      category: "Technology",
+      date: "",
+      venue: "",
+      price: "",
+      totalTickets: "",
+      availableTickets: "",
+      organizerName: "",
+      status: "pending",
+      image: ""
+    });
   };
 
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
         <PageHeader title="Event Management" sub="Create, edit or remove your events." />
-        <Btn onClick={() => setShowForm(!showForm)}>+ Create Event</Btn>
+        <Btn onClick={() => {
+          resetForm();
+          setShowForm(!showForm);
+          setShowEditForm(false);
+          setEditingEvent(null);
+        }}>
+          + Create Event
+        </Btn>
       </div>
 
-      {showForm && (
+      {(showForm || showEditForm) && (
         <Card style={{ marginBottom: 20 }}>
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: C.black, marginTop: 0, marginBottom: 16 }}>New Event</h3>
-          <form onSubmit={handleCreate}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: C.black, marginTop: 0, marginBottom: 16 }}>
+            {showEditForm ? "Edit Event" : "New Event"}
+          </h3>
+          <form onSubmit={showEditForm ? handleUpdate : handleCreate}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div style={{ gridColumn: "span 2" }}>
                 <Input
-                  label="Event Title"
+                  label="Event Title *"
                   required
                   value={form.title}
                   onChange={e => setForm({ ...form, title: e.target.value })}
                   placeholder="e.g. Annual Tech Meetup"
                 />
               </div>
+              
               <Input
-                label="Category"
+                label="Category *"
                 required
+                as="select"
                 value={form.category}
                 onChange={e => setForm({ ...form, category: e.target.value })}
-                placeholder="e.g. Technology"
-              />
+              >
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </Input>
+              
               <Input
-                label="Date"
+                label="Date *"
                 type="date"
                 required
                 value={form.date}
                 onChange={e => setForm({ ...form, date: e.target.value })}
               />
+              
+              <div style={{ gridColumn: "span 2" }}>
+                <Input
+                  label="Venue *"
+                  required
+                  value={form.venue}
+                  onChange={e => setForm({ ...form, venue: e.target.value })}
+                  placeholder="e.g. Mumbai Convention Center"
+                />
+              </div>
+              
               <Input
-                label="Venue"
-                required
-                value={form.venue}
-                onChange={e => setForm({ ...form, venue: e.target.value })}
-                placeholder="e.g. Mumbai Convention Center"
-              />
-              <Input
-                label="Price"
+                label="Price (₹) *"
                 type="number"
                 required
                 value={form.price}
                 onChange={e => setForm({ ...form, price: e.target.value })}
                 placeholder="e.g. 499"
               />
+              
               <Input
-                label="Available Tickets"
+                label="Total Tickets *"
+                type="number"
+                required
+                value={form.totalTickets}
+                onChange={e => setForm({ ...form, totalTickets: e.target.value })}
+                placeholder="e.g. 100"
+              />
+              
+              <Input
+                label="Available Tickets *"
                 type="number"
                 required
                 value={form.availableTickets}
                 onChange={e => setForm({ ...form, availableTickets: e.target.value })}
                 placeholder="e.g. 100"
               />
+              
               <Input
-                label="Organizer"
+                label="Organizer Name *"
                 required
-                value={form.organizer}
-                onChange={e => setForm({ ...form, organizer: e.target.value })}
+                value={form.organizerName}
+                onChange={e => setForm({ ...form, organizerName: e.target.value })}
                 placeholder="e.g. Tech Club"
               />
+              
               <Input
                 label="Status"
                 required
+                as="select"
                 value={form.status}
                 onChange={e => setForm({ ...form, status: e.target.value })}
-                placeholder="pending / approved / rejected"
+              >
+                {statuses.map(status => (
+                  <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
+                ))}
+              </Input>
+              
+              <Input
+                label="Image URL (optional)"
+                value={form.image}
+                onChange={e => setForm({ ...form, image: e.target.value })}
+                placeholder="https://example.com/image.jpg"
               />
             </div>
+            
             <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-              <Btn type="submit">Save Event</Btn>
-              <Btn variant="ghost" onClick={() => setShowForm(false)}>Cancel</Btn>
+              <Btn type="submit">{showEditForm ? "Update Event" : "Save Event"}</Btn>
+              <Btn variant="ghost" onClick={() => {
+                setShowForm(false);
+                setShowEditForm(false);
+                setEditingEvent(null);
+                resetForm();
+              }}>
+                Cancel
+              </Btn>
             </div>
           </form>
         </Card>
@@ -353,15 +528,24 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {events && events.length > 0 ? (
           events.map(ev => (
-            <Card key={ev.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px 20px" }}>
-              <div>
+            <Card key={ev._id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px 20px" }}>
+              <div style={{ flex: 1 }}>
                 <p style={{ fontWeight: 700, fontSize: 14, color: C.black, margin: 0 }}>{ev.title}</p>
-                <p style={{ fontSize: 12, color: "#999", marginTop: 3 }}>{ev.date} · {ev.category} · {ev.seats || ev.availableTickets} seats</p>
+                <p style={{ fontSize: 12, color: "#999", marginTop: 3 }}>
+                  {new Date(ev.date).toLocaleDateString()} · {ev.category} · 
+                  Available: {ev.availableTickets}/{ev.totalTickets} seats · 
+                  ₹{ev.price}
+                </p>
+                {ev.organizer?.name && (
+                  <p style={{ fontSize: 11, color: "#AAA", marginTop: 2 }}>
+                    Organizer: {ev.organizer.name}
+                  </p>
+                )}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                 <Badge status={ev.status} />
-                <Btn variant="outline">Edit</Btn>
-                <Btn variant="danger" onClick={() => handleDelete(ev.id)}>Delete</Btn>
+                <Btn variant="outline" onClick={() => handleEdit(ev)}>Edit</Btn>
+                <Btn variant="danger" onClick={() => handleDelete(ev._id)}>Delete</Btn>
               </div>
             </Card>
           ))
@@ -398,7 +582,7 @@ function Registrations() {
               {["Name", "Email", "Event", tab === "participants" ? "Status" : "Attended"].map(h => (
                 <th key={h} style={{ textAlign: "left", padding: "12px 20px", fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.1em" }}>{h}</th>
               ))}
-            </tr>
+             </tr>
           </thead>
           <tbody>
             {mockParticipants.map((p, i) => (
@@ -507,7 +691,7 @@ function Notifications({ events = [] }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <label style={{ fontSize: 11, color: C.midGray, fontWeight: 600, letterSpacing: "0.04em" }}>Select Event</label>
             <select style={{ border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px 12px", fontSize: 13, fontFamily: "inherit", background: C.white, outline: "none" }}>
-              {events.map(ev => <option key={ev.id}>{ev.title}</option>)}
+              {events.map(ev => <option key={ev._id}>{ev.title}</option>)}
             </select>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -622,30 +806,28 @@ export default function OrganizerPanel() {
   const [active, setActive] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [events, setEvents] = useState([]);
-
-  const NexEventPage = () => {
-    window.location.href = "/";
-  };
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchEvents = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const res = await axios.get(`http://localhost:${PORT}/api/events/get-events`);
-      console.log("GET response:", res.data);
       
-      // Handle different response structures
-      if (res.data && res.data.events && Array.isArray(res.data.events)) {
-        setEvents(res.data.events);
-      } else if (res.data && Array.isArray(res.data)) {
-        setEvents(res.data);
-      } else if (res.data && res.data.success && Array.isArray(res.data.events)) {
+      if (res.data && res.data.success && Array.isArray(res.data.events)) {
         setEvents(res.data.events);
       } else {
         console.warn("Unexpected response structure:", res.data);
         setEvents([]);
+        setError("Failed to load events: Invalid response format");
       }
     } catch (error) {
-      console.log("Error fetching events:", error);
+      console.error("Error fetching events:", error);
+      setError(error.response?.data?.message || "Failed to fetch events");
       setEvents([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -653,7 +835,28 @@ export default function OrganizerPanel() {
     fetchEvents();
   }, []);
 
-  // Render the active view with appropriate props
+  if (loading && events.length === 0) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 24, marginBottom: 16 }}>🎉</div>
+          <p>Loading events...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && events.length === 0) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <Card style={{ textAlign: "center", maxWidth: 400 }}>
+          <p style={{ color: "#C0392B", marginBottom: 16 }}>Error: {error}</p>
+          <Btn onClick={fetchEvents}>Retry</Btn>
+        </Card>
+      </div>
+    );
+  }
+
   const renderActiveView = () => {
     switch(active) {
       case "dashboard":
@@ -711,14 +914,14 @@ export default function OrganizerPanel() {
 
         {/* Logout */}
         <div style={{ padding: "12px 8px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          <button key="logout-button" style={{
+          <button style={{
             width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10,
             border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 600, fontSize: 13,
             background: "transparent", color: "rgba(255,255,255,0.35)", transition: "all 0.15s", whiteSpace: "nowrap",
           }}
             onMouseEnter={e => { e.currentTarget.style.color = "#FF6B6B"; e.currentTarget.style.background = "rgba(255,100,100,0.08)"; }}
             onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; e.currentTarget.style.background = "transparent"; }}
-            onClick={NexEventPage}
+            onClick={() => window.location.href = "/"}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
               <path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -733,14 +936,14 @@ export default function OrganizerPanel() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* Topbar */}
         <header style={{ background: C.white, borderBottom: `1px solid ${C.border}`, padding: "0 24px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-          <button key="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", cursor: "pointer", padding: 8, borderRadius: 8, color: C.midGray, display: "flex", alignItems: "center" }}>
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", cursor: "pointer", padding: 8, borderRadius: 8, color: C.midGray, display: "flex", alignItems: "center" }}>
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 13, color: "#AAA", fontWeight: 500 }}>Organizer Panel</span>
-            <div key="avatar" style={{ width: 34, height: 34, borderRadius: 99, background: C.black, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, color: C.orange }}>O</div>
+            <div style={{ width: 34, height: 34, borderRadius: 99, background: C.black, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, color: C.orange }}>O</div>
           </div>
         </header>
 

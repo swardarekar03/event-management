@@ -78,7 +78,7 @@ export const updateEvent = async (req, res) => {
             }
         );
 
-        res, status(200).json({
+        res.status(200).json({
             success: true,
             event: updatedEvent,
         });
