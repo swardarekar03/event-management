@@ -1,6 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import Organizer from "../models/Organizer.js";
 
 const router = express.Router();
 
@@ -70,28 +71,35 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Please provide email and password" });
     }
 
-    // Find user
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+    // Find user or organizer
+    let account = await User.findOne({ email });
+    let role = "user";
+
+    if (!account) {
+      account = await Organizer.findOne({ email });
+      if (!account) {
+        return res.status(400).json({ message: "Invalid credentials" });
+      }
+      role = "organizer";
     }
 
     // Check password
-    const isMatch = await user.comparePassword(password);
+    const isMatch = await account.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
     // Generate JWT
-    const token = generateToken(user._id);
+    const token = generateToken(account._id);
 
-    // Expose user details and token
+    // Expose details and token
     res.status(200).json({
       token,
+      role,
       user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
+        id: account._id,
+        name: role === "organizer" ? account.fullName : account.name,
+        email: account.email,
       },
     });
   } catch (error) {

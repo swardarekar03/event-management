@@ -40,9 +40,14 @@ export default function Login() {
       // Save credentials in local storage
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("role", data.role || "user");
 
       setLoading(false);
-      navigate("/userDashboard");
+      if (data.role === "organizer") {
+        navigate("/organizerpanel");
+      } else {
+        navigate("/userDashboard");
+      }
     } catch (err) {
       setLoading(false);
       setError(err.message);
