@@ -7,6 +7,7 @@ import EventsSection from "./Landing Page/EventsSection";
 import OrganizerSignup from "./pages/organizerSignup";
 import UserDashboard from "./UserPanel/UserDashoboard";
 import OrganizerPanel from "./OrganizerPanel/OrganizerPanel";
+import AdminDashboard from "./AdminPanel/AdminDashboard";
 
 function AppRoutes() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ function AppRoutes() {
       <Route path="/organizer-signup" element={<OrganizerSignup />} />
       <Route path="/userDashboard" element={<UserDashboard />} />
       <Route path="/organizerpanel" element={<OrganizerPanel />} />
+      <Route path="/admin" element={<AdminDashboard />} />
     </Routes>
   );
 }
