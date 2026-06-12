@@ -71,12 +71,21 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Please provide email and password" });
     }
 
+    const adminEmail = (process.env.ADMIN_EMAIL || "admin@nextevent.com").toLowerCase();
+    const alternateAdminEmail = "admin@nexevent.com";
+    const checkEmail = email.toLowerCase();
+    let searchEmails = [checkEmail];
+
+    if (checkEmail === adminEmail || checkEmail === alternateAdminEmail) {
+      searchEmails = [adminEmail, alternateAdminEmail];
+    }
+
     // Find user or organizer
-    let account = await User.findOne({ email });
+    let account = await User.findOne({ email: { $in: searchEmails } });
     let role = "user";
 
     if (!account) {
-      account = await Organizer.findOne({ email });
+      account = await Organizer.findOne({ email: { $in: searchEmails } });
       if (!account) {
         return res.status(400).json({ message: "Invalid credentials" });
       }
@@ -87,6 +96,11 @@ router.post("/login", async (req, res) => {
     const isMatch = await account.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    // Check if email matches admin email
+    if (role === "user" && searchEmails.includes(account.email.toLowerCase())) {
+      role = "admin";
     }
 
     // Generate JWT

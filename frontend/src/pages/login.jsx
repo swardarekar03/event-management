@@ -43,7 +43,9 @@ export default function Login() {
       localStorage.setItem("role", data.role || "user");
 
       setLoading(false);
-      if (data.role === "organizer") {
+      if (data.role === "admin") {
+        navigate("/admin");
+      } else if (data.role === "organizer") {
         navigate("/organizerpanel");
       } else {
         navigate("/userDashboard");
