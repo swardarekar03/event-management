@@ -66,30 +66,28 @@ router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Basic validation
     if (!email || !password) {
       return res.status(400).json({ message: "Please provide email and password" });
     }
 
-    const adminEmail = (process.env.ADMIN_EMAIL || "admin@nextevent.com").toLowerCase();
-    const alternateAdminEmail = "admin@nexevent.com";
-    const checkEmail = email.toLowerCase();
-    let searchEmails = [checkEmail];
-
-    if (checkEmail === adminEmail || checkEmail === alternateAdminEmail) {
-      searchEmails = [adminEmail, alternateAdminEmail];
-    }
-
     // Find user or organizer
-    let account = await User.findOne({ email: { $in: searchEmails } });
+    let account = await User.findOne({ email: email.toLowerCase() });
     let role = "user";
 
     if (!account) {
-      account = await Organizer.findOne({ email: { $in: searchEmails } });
+      account = await Organizer.findOne({ email: email.toLowerCase() });
       if (!account) {
         return res.status(400).json({ message: "Invalid credentials" });
       }
       role = "organizer";
+    } else {
+      // ✅ Use role from database, not email match
+      role = account.role || "user";
+    }
+
+    // ✅ Check if banned
+    if (account.banned) {
+      return res.status(403).json({ message: "Your account has been banned." });
     }
 
     // Check password
@@ -98,15 +96,9 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Check if email matches admin email
-    if (role === "user" && searchEmails.includes(account.email.toLowerCase())) {
-      role = "admin";
-    }
-
     // Generate JWT
     const token = generateToken(account._id);
 
-    // Expose details and token
     res.status(200).json({
       token,
       role,

@@ -9,9 +9,10 @@ import dotenv from "dotenv";
 import startServer from "./src/config/db.js";
 import authRoutes from "./src/routes/auth.js";
 import ticketRoutes from "./src/routes/tickets.js";
-import eventRoutes from "./src/routes/eventRoute.js";  
+import eventRoutes from "./src/routes/eventRoute.js";
 import organizerRoutes from "./src/routes/organizers.js";
 import registerRotes from "./src/routes/registerRotes.js";
+import adminRoutes from "./src/routes/adminRoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -29,10 +30,10 @@ app.use(express.json());
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/tickets", ticketRoutes);
-app.use("/api/events", eventRoutes);       
+app.use("/api/events", eventRoutes);
 app.use("/api/organizers", organizerRoutes);
 app.use("/api/registerations", registerRotes);
-
+app.use("/api/admin", adminRoutes);
 
 // Base route
 app.get("/", (req, res) => {

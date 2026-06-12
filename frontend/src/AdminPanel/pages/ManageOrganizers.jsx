@@ -34,7 +34,7 @@ export default function ManageOrganizers() {
     };
 
     const filtered = organizers.filter((o) => {
-        const matchQuery = `${o.name} ${o.email} ${o.organization}`.toLowerCase().includes(query.toLowerCase());
+        const matchQuery = `${o.name} ${o.email} ${o.orgName}`.toLowerCase().includes(query.toLowerCase());
         const matchFilter = filter === "all" || o.status === filter;
         return matchQuery && matchFilter;
     });
@@ -112,11 +112,11 @@ export default function ManageOrganizers() {
                                             <div className="w-8 h-8 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center uppercase">
                                                 {org.name?.[0] || "O"}
                                             </div>
-                                            <span className="font-medium text-gray-800">{org.name}</span>
+                                            <span className="font-medium text-gray-800">{org.fullName}</span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-gray-500">{org.email}</td>
-                                    <td className="px-6 py-4 text-gray-600">{org.organization || "—"}</td>
+                                    <td className="px-6 py-4 text-gray-600">{org.orgName || "—"}</td>
                                     <td className="px-6 py-4">
                                         <span className={`flex items-center gap-1 w-fit px-2 py-1 rounded-full text-xs font-medium ${
                                             org.status === "approved"

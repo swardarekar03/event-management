@@ -64,6 +64,11 @@ const OrganizerSchema = new mongoose.Schema({
     required: [true, "Please provide verification ID number"],
     trim: true,
   },
+  status: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: "pending",
+  },
   createdAt: {
     type: Date,
     default: Date.now,

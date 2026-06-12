@@ -19,6 +19,15 @@ const UserSchema = new mongoose.Schema({
     required: [true, "Please provide a password"],
     minlength: [6, "Password must be at least 6 characters"],
   },
+  role: {
+    type: String,
+    enum: ["user", "organizer", "admin"],
+    default: "user",
+  },
+  banned: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
