@@ -46,9 +46,9 @@ const EventSchema = new mongoose.Schema({
   organizerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Organizer",
-    required: true,
   },
   organizer: {
+    id: { type: mongoose.Schema.Types.ObjectId },
     name: String
   },
   status: {
@@ -63,7 +63,6 @@ const EventSchema = new mongoose.Schema({
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true,
   },
 },
   { timestamps: true }

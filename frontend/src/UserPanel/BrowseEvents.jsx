@@ -19,17 +19,25 @@ export default function BrowseEvents() {
   const [events, setEvents] = useState([]);
   const [booking, setBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    setLoading(true);
     fetch("http://localhost:5000/api/events/get-events", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     })
       .then((res) => res.json())
-      .then((data) => setEvents(Array.isArray(data.events) ? data.events : []))
-      .catch((err) => console.error("Failed to fetch events:", err));
+      .then((data) => {
+        setEvents(Array.isArray(data.events) ? data.events : []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch events:", err);
+        setLoading(false);
+      });
   }, []);
 
   const featuredRows = useMemo(() => [
@@ -105,8 +113,10 @@ export default function BrowseEvents() {
       </section>
 
       <section className="event-shelves" aria-label="Event collections">
-        {events.length === 0 ? (
-          <p style={{ textAlign: "center", padding: "2rem" }}>Loading events...</p>
+        {loading ? (
+          <p style={{ textAlign: "center", padding: "2rem" }}>⏳ Loading events...</p>
+        ) : events.length === 0 ? (
+          <p style={{ textAlign: "center", padding: "2rem" }}>No approved events available right now. Check back soon!</p>
         ) : (
           visibleRows.map((row) => (
             <div className="event-row" key={row.title}>

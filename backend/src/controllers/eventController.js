@@ -8,6 +8,7 @@ export const createEvent = async (req, res) => {
   try {
     const eventData = {
       ...req.body,
+      organizerId: req.user.id,
       organizer: {
         id: req.user.id,
         name: req.user.orgName || req.user.name,
@@ -43,18 +44,12 @@ export const getMyEvents = async (req, res) => {
   }
 };
 
-// @desc    Get all events (admin sees all; users/organizers see only approved)
+// @desc    Get all events (public browse)
 // @route   GET /api/events/get-events
-// @access  Private
+// @access  Public
 export const getEvents = async (req, res) => {
   try {
-    let filter = {};
-    // Non-admins only see approved events
-    if (req.user.role !== "admin") {
-      filter = { status: "approved" };
-    }
-
-    const events = await Event.find(filter);
+    const events = await Event.find({});
 
     res.json({
       success: true,
