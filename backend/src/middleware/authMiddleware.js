@@ -34,6 +34,7 @@ const protect = async (req, res, next) => {
       id: account._id,
       role,
       name: account.name || account.fullName,
+      orgName: account.orgName || null,  // ← added for organizer event creation
       email: account.email,
     };
 

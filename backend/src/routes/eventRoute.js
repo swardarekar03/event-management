@@ -11,11 +11,11 @@ import {
 
 const router = express.Router();
 
-router.post("/create-event",protect, createEvent);
-router.get("/get-events", getEvents); // Public: anyone can browse events
-router.get("/get-event/:id",protect, singleEvent);
-router.put("/update-event/:id",protect, updateEvent);
-router.delete("/delete-event/:id",protect, deleteEvent);
-router.get("/getMyEvents",protect, getMyEvents);
+router.get("/", getEvents);                              // ← changed from "/get-events"
+router.post("/create-event", protect, createEvent);
+router.get("/get-event/:id", protect, singleEvent);
+router.put("/update-event/:id", protect, updateEvent);
+router.delete("/delete-event/:id", protect, deleteEvent);
+router.get("/getMyEvents", protect, getMyEvents);
 
 export default router;

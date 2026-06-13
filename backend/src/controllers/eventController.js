@@ -13,6 +13,7 @@ export const createEvent = async (req, res) => {
         id: req.user.id,
         name: req.user.orgName || req.user.name,
       },
+      status: "pending",
     };
     
     const event = await Event.create(eventData);
@@ -44,12 +45,12 @@ export const getMyEvents = async (req, res) => {
   }
 };
 
-// @desc    Get all events (public browse)
+// @desc    Get all events (public browse) - approved only
 // @route   GET /api/events/get-events
 // @access  Public
 export const getEvents = async (req, res) => {
   try {
-    const events = await Event.find({});
+    const events = await Event.find({ status: "approved" });
 
     res.json({
       success: true,
@@ -72,7 +73,6 @@ export const singleEvent = async (req, res) => {
       return res.status(404).json({ success: false, message: "Event not found" });
     }
     
-    // Check if user has access (organizer of the event or admin)
     if (event.organizer.id !== req.user.id && req.user.role !== "admin") {
       return res.status(403).json({ success: false, message: "Access denied" });
     }
@@ -98,7 +98,6 @@ export const updateEvent = async (req, res) => {
       return res.status(404).json({ success: false, message: "Event not found" });
     }
     
-    // Check if the organizer owns this event
     if (event.organizer.id !== req.user.id) {
       return res.status(403).json({ success: false, message: "You can only update your own events" });
     }
@@ -130,7 +129,6 @@ export const deleteEvent = async (req, res) => {
       return res.status(404).json({ success: false, message: "Event not found" });
     }
     
-    // Check if the organizer owns this event
     if (event.organizer.id !== req.user.id) {
       return res.status(403).json({ success: false, message: "You can only delete your own events" });
     }

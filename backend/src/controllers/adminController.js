@@ -36,6 +36,16 @@ export const getAllOrganizers = async (req, res) => {
     }
 };
 
+// GET /api/admin/events — all events including pending/rejected
+export const getAllEvents = async (req, res) => {
+    try {
+        const events = await Event.find().sort({ createdAt: -1 });
+        res.status(200).json({ success: true, events });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to fetch events", error: error.message });
+    }
+};
+
 // DELETE /api/admin/events/:id
 export const deleteEvent = async (req, res) => {
     try {
@@ -46,6 +56,40 @@ export const deleteEvent = async (req, res) => {
         res.status(200).json({ message: "Event deleted successfully" });
     } catch (error) {
         res.status(500).json({ message: "Failed to delete event", error: error.message });
+    }
+};
+
+// PATCH /api/admin/events/:id/approve
+export const approveEvent = async (req, res) => {
+    try {
+        const event = await Event.findByIdAndUpdate(
+            req.params.id,
+            { status: "approved" },
+            { new: true }
+        );
+        if (!event) {
+            return res.status(404).json({ message: "Event not found" });
+        }
+        res.status(200).json({ message: "Event approved", event });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to approve event", error: error.message });
+    }
+};
+
+// PATCH /api/admin/events/:id/reject
+export const rejectEvent = async (req, res) => {
+    try {
+        const event = await Event.findByIdAndUpdate(
+            req.params.id,
+            { status: "rejected" },
+            { new: true }
+        );
+        if (!event) {
+            return res.status(404).json({ message: "Event not found" });
+        }
+        res.status(200).json({ message: "Event rejected", event });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to reject event", error: error.message });
     }
 };
 

@@ -223,23 +223,34 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
   const [editingEvent, setEditingEvent] = useState(null);
   const [form, setForm] = useState({
     title: "", category: "Technology", date: "", venue: "", price: "",
-    totalTickets: "", availableTickets: "", organizerName: "", status: "pending", image: ""
+    totalTickets: "", availableTickets: "", organizerName: "", image: ""
+    // ← status removed: backend always sets it to "pending" on create
   });
 
   const categories = ["Technology", "Workshop", "Sports", "Cultural", "Business", "Music", "Other"];
-  const statuses = ["pending", "approved", "rejected"];
 
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(`http://localhost:${PORT}/api/events/create-event`, {
-        title: form.title, category: form.category, date: form.date, venue: form.venue,
-        price: Number(form.price), totalTickets: Number(form.totalTickets),
+        title: form.title,
+        category: form.category,
+        date: form.date,
+        venue: form.venue,
+        price: Number(form.price),
+        totalTickets: Number(form.totalTickets),
         availableTickets: Number(form.availableTickets),
-        organizer: { name: form.organizerName }, status: form.status, image: form.image || ""
+        organizer: { name: form.organizerName },
+        image: form.image || ""
+        // ← status removed: backend sets "pending" automatically
       }, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.data.success && res.data.event) { await fetchEvents(); resetForm(); setShowForm(false); alert("Event created successfully!"); }
+      if (res.data.success && res.data.event) {
+        await fetchEvents();
+        resetForm();
+        setShowForm(false);
+        alert("Event submitted for admin approval!");  // ← updated message
+      }
     } catch (err) { alert(err.response?.data?.message || "Failed to create event"); }
   };
 
@@ -248,12 +259,23 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(`http://localhost:${PORT}/api/events/update-event/${editingEvent._id}`, {
-        title: form.title, category: form.category, date: form.date, venue: form.venue,
-        price: Number(form.price), totalTickets: Number(form.totalTickets),
+        title: form.title,
+        category: form.category,
+        date: form.date,
+        venue: form.venue,
+        price: Number(form.price),
+        totalTickets: Number(form.totalTickets),
         availableTickets: Number(form.availableTickets),
-        organizer: { name: form.organizerName }, status: form.status, image: form.image || ""
+        organizer: { name: form.organizerName },
+        image: form.image || ""
       }, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.data.success) { await fetchEvents(); resetForm(); setShowEditForm(false); setEditingEvent(null); alert("Event updated!"); }
+      if (res.data.success) {
+        await fetchEvents();
+        resetForm();
+        setShowEditForm(false);
+        setEditingEvent(null);
+        alert("Event updated!");
+      }
     } catch (err) { alert(err.response?.data?.message || "Failed to update event"); }
   };
 
@@ -261,7 +283,9 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
     if (!window.confirm("Delete this event?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:${PORT}/api/events/delete-event/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.delete(`http://localhost:${PORT}/api/events/delete-event/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       await fetchEvents();
       alert("Deleted!");
     } catch (err) { alert(err.response?.data?.message || "Failed to delete event"); }
@@ -269,11 +293,25 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
 
   const handleEdit = (ev) => {
     setEditingEvent(ev);
-    setForm({ title: ev.title || "", category: ev.category || "Technology", date: ev.date ? new Date(ev.date).toISOString().split('T')[0] : "", venue: ev.venue || "", price: ev.price?.toString() || "", totalTickets: ev.totalTickets?.toString() || "", availableTickets: ev.availableTickets?.toString() || "", organizerName: ev.organizer?.name || "", status: ev.status || "pending", image: ev.image || "" });
-    setShowEditForm(true); setShowForm(false);
+    setForm({
+      title: ev.title || "",
+      category: ev.category || "Technology",
+      date: ev.date ? new Date(ev.date).toISOString().split('T')[0] : "",
+      venue: ev.venue || "",
+      price: ev.price?.toString() || "",
+      totalTickets: ev.totalTickets?.toString() || "",
+      availableTickets: ev.availableTickets?.toString() || "",
+      organizerName: ev.organizer?.name || "",
+      image: ev.image || ""
+    });
+    setShowEditForm(true);
+    setShowForm(false);
   };
 
-  const resetForm = () => setForm({ title: "", category: "Technology", date: "", venue: "", price: "", totalTickets: "", availableTickets: "", organizerName: "", status: "pending", image: "" });
+  const resetForm = () => setForm({
+    title: "", category: "Technology", date: "", venue: "", price: "",
+    totalTickets: "", availableTickets: "", organizerName: "", image: ""
+  });
 
   return (
     <div>
@@ -295,7 +333,7 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
               <Input label="Total Tickets *" type="number" required value={form.totalTickets} onChange={e => setForm({ ...form, totalTickets: e.target.value })} placeholder="e.g. 100" />
               <Input label="Available Tickets *" type="number" required value={form.availableTickets} onChange={e => setForm({ ...form, availableTickets: e.target.value })} placeholder="e.g. 100" />
               <Input label="Organizer Name *" required value={form.organizerName} onChange={e => setForm({ ...form, organizerName: e.target.value })} placeholder="e.g. Tech Club" />
-              <Input label="Status" required as="select" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>{statuses.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}</Input>
+              {/* ← Status field removed: admin controls approval, not organizer */}
               <Input label="Image URL (optional)" value={form.image} onChange={e => setForm({ ...form, image: e.target.value })} placeholder="https://example.com/image.jpg" />
             </div>
             <div className="flex gap-2.5 mt-4">
@@ -305,6 +343,11 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
           </form>
         </Card>
       )}
+
+      {/* Info banner for organizer */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 mb-4 text-[13px] text-yellow-700 font-medium">
+        ⏳ New events require admin approval before they appear publicly.
+      </div>
 
       <div className="flex flex-col gap-2.5">
         {events.length > 0 ? events.map(ev => (
@@ -624,15 +667,12 @@ export default function OrganizerPanel() {
     <div className="flex h-screen bg-[#fdf6f0] font-sans overflow-hidden">
       {/* Sidebar */}
       <aside className={`${sidebarOpen ? "w-64" : "w-0 overflow-hidden"} transition-all duration-300 bg-white border-r border-orange-100 flex flex-col shrink-0`}>
-        {/* Brand */}
         <div className="px-6 py-5 border-b border-orange-100">
           <span className="text-2xl font-extrabold text-orange-500 tracking-tight">
             Nex<span className="text-purple-600">Event</span>
           </span>
           <p className="text-xs text-gray-400 mt-0.5">Organizer Panel</p>
         </div>
-
-        {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {sidebarItems.map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => setActive(id)}
@@ -646,8 +686,6 @@ export default function OrganizerPanel() {
             </button>
           ))}
         </nav>
-
-        {/* Logout */}
         <div className="px-3 py-4 border-t border-orange-100">
           <button
             onClick={() => window.location.href = "/"}
@@ -660,7 +698,6 @@ export default function OrganizerPanel() {
 
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Topbar */}
         <header className="bg-white border-b border-orange-100 px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-4">
             <button onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -669,19 +706,14 @@ export default function OrganizerPanel() {
             </button>
             <h1 className="text-lg font-bold text-gray-800">{activeLabel}</h1>
           </div>
-
           <div className="flex items-center gap-3">
             <button className="relative p-2 rounded-lg hover:bg-orange-50 text-gray-500 hover:text-orange-500 transition">
               <Bell size={20} />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full"></span>
             </button>
-            <div className="w-9 h-9 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-sm">
-              O
-            </div>
+            <div className="w-9 h-9 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-sm">O</div>
           </div>
         </header>
-
-        {/* Content */}
         <main className="flex-1 overflow-y-auto p-6">
           {renderActiveView()}
         </main>
