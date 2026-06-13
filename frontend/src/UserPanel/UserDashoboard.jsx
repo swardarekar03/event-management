@@ -3,8 +3,9 @@ import { useRef, useState, useEffect } from "react";
 import BrowseEvents from "./BrowseEvents.jsx";
 import Tickets from "./Tickets.jsx";
 import Gallery from "./Gallery.jsx";
+import RegisteredEvents from "./RegisteredEvents.jsx";
 
-const myEvents = ["Upcoming Events", "Completed Events"];
+const myEvents = ["Registered Events","Upcoming Events", "Completed Events"];
 
 export default function UserDashboard({ onBackHome }) {
   const [activeLink, setActiveLink]         = useState("browse");
@@ -33,6 +34,7 @@ export default function UserDashboard({ onBackHome }) {
       case "browse":           return <BrowseEvents />;
       case "tickets":          return <Tickets />;
       case "gallery":          return <Gallery />;
+      case "Registered Events": return <RegisteredEvents />;
       case "Upcoming Events":  return <BrowseEvents filterType="upcoming" />;
       case "Completed Events": return <BrowseEvents filterType="completed" />;
       default:                 return <BrowseEvents />;

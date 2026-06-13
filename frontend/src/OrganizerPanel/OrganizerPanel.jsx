@@ -387,15 +387,30 @@ function Registrations() {
   const fetchRegistrations = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`http://localhost:5000/api/registrations/organizer`, {
-        headers: { Authorization: `Bearer ${token}` }
+      if (!token) {
+        setError("No authentication token found");
+        setLoading(false);
+        return;
+      }
+
+      // Use the PORT constant instead of hardcoding 5000
+      const res = await axios.get(`http://localhost:${PORT}/api/registrations/organizer`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
+
+      console.log("Registrations response:", res.data); // Debug log
+
       if (res.data.success && Array.isArray(res.data.registrations)) {
         setRegistrations(res.data.registrations);
       } else {
         setRegistrations([]);
+        if (res.data.message) setError(res.data.message);
       }
     } catch (err) {
+      console.error("Fetch registrations error:", err);
       setError(err.response?.data?.message || "Failed to fetch registrations");
     } finally {
       setLoading(false);
@@ -409,12 +424,12 @@ function Registrations() {
   const handleCheckIn = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.put(`http://localhost:5000/api/registrations/checkin/${id}`, {}, {
+      const res = await axios.put(`http://localhost:${PORT}/api/registrations/checkin/${input.trim()}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
         alert("Check-in successful!");
-        fetchRegistrations();
+        fetchRegistrations(); // Refresh the list
       }
     } catch (err) {
       alert(err.response?.data?.message || "Failed to check in");
@@ -426,12 +441,38 @@ function Registrations() {
   }
 
   if (error) {
-    return <div className="p-5 text-red-500 text-[13px]">Error: {error}</div>;
+    return (
+      <div className="p-5">
+        <div className="text-red-500 text-[13px] mb-3">Error: {error}</div>
+        <Btn onClick={fetchRegistrations}>Retry</Btn>
+      </div>
+    );
   }
 
   return (
     <div>
       <PageHeader title="Registrations" sub="View participants and attendance records." />
+
+      {/* Stats Summary */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="bg-white rounded-xl p-4 border border-orange-100">
+          <div className="text-2xl font-bold text-orange-600">{registrations.length}</div>
+          <div className="text-xs text-gray-400">Total Registrations</div>
+        </div>
+        <div className="bg-white rounded-xl p-4 border border-orange-100">
+          <div className="text-2xl font-bold text-emerald-600">
+            {registrations.filter(r => r.checkInStatus).length}
+          </div>
+          <div className="text-xs text-gray-400">Checked In</div>
+        </div>
+        <div className="bg-white rounded-xl p-4 border border-orange-100">
+          <div className="text-2xl font-bold text-amber-600">
+            {registrations.filter(r => !r.checkInStatus).length}
+          </div>
+          <div className="text-xs text-gray-400">Pending Check-in</div>
+        </div>
+      </div>
+
       <div className="flex gap-2 mb-5">
         {["participants", "attendance"].map(t => (
           <button key={t} onClick={() => setTab(t)}
@@ -440,35 +481,40 @@ function Registrations() {
           </button>
         ))}
       </div>
+
       <div className="bg-white rounded-2xl border border-orange-100 overflow-hidden">
         {registrations.length === 0 ? (
-          <div className="p-8 text-center text-gray-400 text-[13px]">No registrations found for your events.</div>
+          <div className="p-8 text-center text-gray-400 text-[13px]">
+            No registrations found for your events yet.
+            <div className="mt-2 text-xs">When audience members register for your events, they'll appear here.</div>
+          </div>
         ) : (
           <table className="w-full border-collapse text-[13px]">
             <thead>
               <tr className="bg-orange-50">
-                {["Name", "Email", "Event", tab === "participants" ? "Status" : "Attended"].map(h => (
+                {["Name", "Email", "Event", "Tickets", tab === "participants" ? "Status" : "Check-in Status"].map(h => (
                   <th key={h} className="text-left px-5 py-3 text-[10px] font-bold text-orange-500 uppercase tracking-[0.1em]">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {registrations.map((p, i) => (
-                <tr key={p._id} className={`border-b border-orange-50 ${i % 2 === 0 ? "bg-white" : "bg-orange-50/40"}`}>
-                  <td className="px-5 py-3 font-semibold text-gray-800">{p.attendeeName}</td>
-                  <td className="px-5 py-3 text-gray-400">{p.attendeeEmail}</td>
-                  <td className="px-5 py-3 text-gray-500">{p.event?.title || "Deleted Event"}</td>
+              {registrations.map((registration, i) => (
+                <tr key={registration._id} className={`border-b border-orange-50 ${i % 2 === 0 ? "bg-white" : "bg-orange-50/40"}`}>
+                  <td className="px-5 py-3 font-semibold text-gray-800">{registration.attendeeName}</td>
+                  <td className="px-5 py-3 text-gray-400">{registration.attendeeEmail}</td>
+                  <td className="px-5 py-3 text-gray-500">{registration.event?.title || "Event Deleted"}</td>
+                  <td className="px-5 py-3 text-gray-500">{registration.ticketsBooked || 1}</td>
                   <td className="px-5 py-3">
                     {tab === "participants" ? (
-                      <Badge status={p.paymentStatus || "confirmed"} />
+                      <Badge status="confirmed" />
                     ) : (
                       <div className="flex items-center gap-3">
-                        <span className={`text-[11px] font-bold px-[10px] py-1 rounded-full ${p.checkInStatus ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
-                          {p.checkInStatus ? "Present" : "Absent"}
+                        <span className={`text-[11px] font-bold px-[10px] py-1 rounded-full ${registration.checkInStatus ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
+                          {registration.checkInStatus ? "✓ Checked In" : "○ Not Checked In"}
                         </span>
-                        {!p.checkInStatus && (
+                        {!registration.checkInStatus && (
                           <button
-                            onClick={() => handleCheckIn(p._id)}
+                            onClick={() => handleCheckIn(registration._id)}
                             className="bg-orange-100 hover:bg-orange-200 text-orange-600 text-[10px] font-bold px-2.5 py-1 rounded-lg border-none cursor-pointer transition-colors"
                           >
                             Check In
@@ -483,6 +529,16 @@ function Registrations() {
           </table>
         )}
       </div>
+
+      {/* Debug info (remove in production) */}
+      {process.env.NODE_ENV === 'development' && registrations.length > 0 && (
+        <div className="mt-4 p-3 bg-gray-50 rounded-xl text-[10px] text-gray-400">
+          <details>
+            <summary>Debug: Registration IDs</summary>
+            <pre>{JSON.stringify(registrations.map(r => ({ id: r._id, eventId: r.event?._id, name: r.attendeeName })), null, 2)}</pre>
+          </details>
+        </div>
+      )}
     </div>
   );
 }
