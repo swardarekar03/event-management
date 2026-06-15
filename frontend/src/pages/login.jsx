@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location  = useLocation();
+  // Where to send the user after login (set by PrivateRoute or manual navigation)
+  const from = location.state?.from?.pathname || null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -43,12 +46,15 @@ export default function Login() {
       localStorage.setItem("role", data.role || "user");
 
       setLoading(false);
-      if (data.role === "admin") {
-        navigate("/admin");
-      } else if (data.role === "organizer") {
-        navigate("/organizerpanel");
+
+      // After login, send user to where they came from (if matching role), else default panel
+      const role = data.role || "user";
+      if (role === "admin") {
+        navigate(from && from.startsWith("/admin") ? from : "/admin", { replace: true });
+      } else if (role === "organizer") {
+        navigate(from && from.startsWith("/organizerpanel") ? from : "/organizerpanel", { replace: true });
       } else {
-        navigate("/userDashboard");
+        navigate(from && (from.startsWith("/userDashboard") || from.startsWith("/notifications")) ? from : "/userDashboard", { replace: true });
       }
     } catch (err) {
       setLoading(false);

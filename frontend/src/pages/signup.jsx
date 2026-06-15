@@ -47,9 +47,10 @@ export default function Signup() {
       // Save credentials in local storage
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("role", "user");
 
       setLoading(false);
-      navigate("/userDashboard");
+      navigate("/userDashboard", { replace: true });
     } catch (err) {
       setLoading(false);
       setError(err.message);
