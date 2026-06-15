@@ -17,7 +17,7 @@ export default function Overview() {
         const headers = { Authorization: `Bearer ${token}` };
 
         // Fetch events count
-        fetch("https://event-management-ak5b.onrender.com/api/events", { headers })
+        fetch("https://event-management-ak5b.onrender.com/api/admin/events", { headers })
             .then(r => r.json())
             .then(d => setStats(prev => ({ ...prev, events: d.events?.length || 0 })))
             .catch(() => {});
