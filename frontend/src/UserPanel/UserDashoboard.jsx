@@ -1,4 +1,4 @@
-import { ChevronDown, LogOut } from "lucide-react";
+import { ChevronDown, LogOut, Menu, X } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import BrowseEvents from "./BrowseEvents.jsx";
 import Tickets from "./Tickets.jsx";
@@ -13,6 +13,8 @@ export default function UserDashboard({ onBackHome, onLogout }) {
   const [activeLink, setActiveLink] = useState("browse");
   const [myEventsOpen, setMyEventsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileMyEventsOpen, setMobileMyEventsOpen] = useState(false);
   const profileRef = useRef(null);
   const myEventsRef = useRef(null);
 
@@ -25,6 +27,12 @@ export default function UserDashboard({ onBackHome, onLogout }) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  // Close mobile menu on link selection
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setMobileMyEventsOpen(false);
+  }, [activeLink]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -58,6 +66,19 @@ export default function UserDashboard({ onBackHome, onLogout }) {
     </a>
   );
 
+  const mobileNavLink = (key, label) => (
+    <a
+      href={`#${key}`}
+      onClick={(e) => { e.preventDefault(); setActiveLink(key); }}
+      className={`block px-4 py-3 text-sm font-semibold no-underline transition-colors rounded-lg ${activeLink === key
+          ? "text-orange-500 bg-orange-50"
+          : "text-stone-600 hover:bg-stone-50 hover:text-orange-500"
+        }`}
+    >
+      {label}
+    </a>
+  );
+
   return (
     <main
       className="min-h-screen font-sans text-stone-900"
@@ -67,7 +88,7 @@ export default function UserDashboard({ onBackHome, onLogout }) {
       }}
     >
       {/* ── Nav ── */}
-      <nav className="w-full px-12 py-5 flex items-center justify-between border-b border-stone-200/60 bg-white/60 backdrop-blur-sm sticky top-0 z-40 max-md:px-5">
+      <nav className="w-full px-4 sm:px-6 lg:px-12 py-4 lg:py-5 flex items-center justify-between border-b border-stone-200/60 bg-white/60 backdrop-blur-sm sticky top-0 z-40">
         {/* Brand */}
         <button
           onClick={onBackHome}
@@ -82,8 +103,8 @@ export default function UserDashboard({ onBackHome, onLogout }) {
           NexEvent
         </button>
 
-        {/* Links */}
-        <div className="flex items-center gap-7 max-md:gap-4">
+        {/* Desktop Links */}
+        <div className="hidden lg:flex items-center gap-7">
           {navLink("browse", "Browse Events")}
 
           {/* My Events dropdown */}
@@ -148,15 +169,77 @@ export default function UserDashboard({ onBackHome, onLogout }) {
             )}
           </div>
         </div>
+
+        {/* Mobile hamburger */}
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen((o) => !o)}
+          className="lg:hidden p-2 rounded-lg border-0 bg-transparent cursor-pointer text-stone-600 hover:text-orange-500 hover:bg-orange-50 transition-colors"
+        >
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
       </nav>
 
+      {/* ── Mobile Menu Drawer ── */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden border-b border-stone-200/60 bg-white shadow-md sticky top-[60px] z-30 max-h-[calc(100vh-60px)] overflow-y-auto">
+          <div className="px-3 py-3 flex flex-col gap-1">
+            {mobileNavLink("browse", "Browse Events")}
+
+            {/* My Events collapsible */}
+            <button
+              type="button"
+              onClick={() => setMobileMyEventsOpen((o) => !o)}
+              className={`flex items-center justify-between px-4 py-3 text-sm font-semibold border-0 bg-transparent cursor-pointer rounded-lg transition-colors ${myEvents.includes(activeLink)
+                  ? "text-orange-500 bg-orange-50"
+                  : "text-stone-600 hover:bg-stone-50 hover:text-orange-500"
+                }`}
+            >
+              My Events
+              <ChevronDown size={15} className={`transition-transform ${mobileMyEventsOpen ? "rotate-180" : ""}`} />
+            </button>
+            {mobileMyEventsOpen && (
+              <div className="pl-4 flex flex-col gap-1">
+                {myEvents.map((event) => (
+                  <a
+                    key={event}
+                    href={`#${event}`}
+                    onClick={(e) => { e.preventDefault(); setActiveLink(event); }}
+                    className={`block px-4 py-2.5 text-sm no-underline rounded-lg transition-colors ${activeLink === event
+                        ? "text-orange-500 bg-orange-50 font-semibold"
+                        : "text-stone-600 hover:bg-stone-50 hover:text-orange-500"
+                      }`}
+                  >
+                    {event}
+                  </a>
+                ))}
+              </div>
+            )}
+
+            {mobileNavLink("tickets", "Tickets")}
+            {mobileNavLink("gallery", "Gallery")}
+            {mobileNavLink("Notications", "Notifications")}
+            {mobileNavLink("Feedback", "Feedback")}
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-2.5 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors border-0 bg-transparent cursor-pointer font-semibold rounded-lg mt-1 border-t border-stone-100 pt-3"
+            >
+              <LogOut size={15} />
+              Logout
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Content ── */}
-      <section className="px-12 py-8 max-md:px-5">
+      <section className="px-4 sm:px-6 lg:px-12 py-6 lg:py-8">
         {renderContent()}
       </section>
 
       {/* ── Footer ── */}
-      <footer className="mt-4 px-12 py-8 flex items-center justify-between gap-6 bg-stone-900 text-stone-400 max-md:px-5 max-md:flex-col max-md:items-start">
+      <footer className="mt-4 px-4 sm:px-6 lg:px-12 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 bg-stone-900 text-stone-400">
         <div>
           <strong
             className="block mb-1 text-base font-black"

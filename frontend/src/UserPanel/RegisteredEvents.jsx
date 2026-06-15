@@ -112,7 +112,7 @@ export default function RegisteredEvents() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center px-4">
         <div className="text-center max-w-md p-6 bg-white rounded-2xl shadow-md">
           <p className="text-red-500 mb-4">{error}</p>
           <button 
@@ -131,21 +131,21 @@ export default function RegisteredEvents() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         
         {/* Hero Section */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-10 sm:mb-12">
           <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-600 px-4 py-2 rounded-full mb-4">
             <Sparkles size={16} />
             <span className="text-sm font-semibold tracking-wide">MY EVENTS</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
             Your Registered Events
           </h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto">
             Manage all events you've registered for and get ready for amazing experiences.
           </p>
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-10 sm:mb-12">
           <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
             <div className="text-2xl font-bold text-orange-600">{registrations.length}</div>
             <div className="text-slate-500 text-sm">Total Events</div>
@@ -171,16 +171,16 @@ export default function RegisteredEvents() {
         </div>
 
         {/* Events Grid */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
           <div className="flex items-center gap-3">
             <TrendingUp className="text-orange-500" size={24} />
-            <h2 className="text-2xl font-bold text-slate-800">Your Events</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Your Events</h2>
           </div>
           <span className="text-sm text-slate-400">{registrations.length} events</span>
         </div>
 
         {registrations.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
+          <div className="text-center py-16 bg-white rounded-2xl border border-slate-100 px-4">
             <div className="inline-flex items-center justify-center w-24 h-24 bg-orange-50 rounded-full mb-4">
               <Ticket size={40} className="text-orange-400" />
             </div>
@@ -194,7 +194,7 @@ export default function RegisteredEvents() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
             {registrations.map((registration) => {
               const event = registration.event;
               if (!event) return null;
@@ -207,7 +207,7 @@ export default function RegisteredEvents() {
                   className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-slate-100"
                 >
                   {/* Image Section */}
-                  <div className="relative h-52 overflow-hidden bg-gradient-to-br from-orange-400 to-orange-600">
+                  <div className="relative h-44 sm:h-52 overflow-hidden bg-gradient-to-br from-orange-400 to-orange-600">
                     <img
                       src={event.image || "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200"}
                       alt={event.title}
@@ -238,15 +238,15 @@ export default function RegisteredEvents() {
                   </div>
 
                   {/* Content */}
-                  <div className="p-5">
-                    <h3 className="text-xl font-bold text-slate-800 mb-3 line-clamp-1">
+                  <div className="p-4 sm:p-5">
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-800 mb-3 line-clamp-1">
                       {event.title}
                     </h3>
 
                     {/* Date and Venue */}
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center gap-2 text-slate-600 text-sm">
-                        <CalendarDays size={16} className="text-orange-500" />
+                        <CalendarDays size={16} className="text-orange-500 shrink-0" />
                         <span>
                           {new Date(event.date).toLocaleDateString('en-US', {
                             month: 'short',
@@ -256,13 +256,13 @@ export default function RegisteredEvents() {
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-slate-600 text-sm">
-                        <MapPin size={16} className="text-orange-500" />
+                        <MapPin size={16} className="text-orange-500 shrink-0" />
                         <span className="truncate">{event.venue}</span>
                       </div>
                     </div>
 
                     {/* Price and Tickets */}
-                    <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 gap-2 flex-wrap">
                       <div>
                         <div className="text-xs text-slate-500">Total Paid</div>
                         <div className="text-xl font-bold text-orange-600">
@@ -285,7 +285,7 @@ export default function RegisteredEvents() {
                         
                         <button
                           onClick={() => handleMoreTickets(registration)}
-                          className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition transform hover:scale-105 shadow-sm"
+                          className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition transform hover:scale-105 shadow-sm shrink-0"
                           title="Book more tickets"
                         >
                           <Plus size={14} />
@@ -299,7 +299,7 @@ export default function RegisteredEvents() {
                     </p>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-2 mt-4">
+                    <div className="flex flex-col sm:flex-row gap-2 mt-4">
                       <button
                         onClick={() => handleViewTicket(registration)}
                         className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2"
@@ -311,7 +311,7 @@ export default function RegisteredEvents() {
 
                       <button
                         onClick={() => setSelectedEvent(registration)}
-                        className="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all duration-200 text-sm font-medium flex items-center gap-2"
+                        className="flex-1 sm:flex-initial px-4 py-2 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all duration-200 text-sm font-medium flex items-center justify-center gap-2"
                       >
                         <Info size={16} />
                         Details
@@ -319,7 +319,7 @@ export default function RegisteredEvents() {
 
                       <button
                         onClick={() => handleCancel(registration._id, event._id, registration.ticketsBooked)}
-                        className="px-4 py-2 border border-red-200 text-red-500 rounded-xl hover:bg-red-50 transition-all duration-200 text-sm font-medium flex items-center gap-2"
+                        className="flex-1 sm:flex-initial px-4 py-2 border border-red-200 text-red-500 rounded-xl hover:bg-red-50 transition-all duration-200 text-sm font-medium flex items-center justify-center gap-2"
                         disabled={registration.checkInStatus}
                       >
                         <Trash2 size={16} />
@@ -335,9 +335,9 @@ export default function RegisteredEvents() {
 
         {/* Event Details Modal - Same as before */}
         {selectedEvent && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-            <div className="bg-white rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl">
-              <div className="relative h-64">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-fadeIn">
+            <div className="bg-white rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl max-h-[92vh] overflow-y-auto">
+              <div className="relative h-48 sm:h-64">
                 <img
                   src={selectedEvent.event?.image || "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200"}
                   alt={selectedEvent.event?.title}
@@ -352,9 +352,9 @@ export default function RegisteredEvents() {
                 </button>
               </div>
 
-              <div className="p-6 sm:p-8">
+              <div className="p-5 sm:p-6 lg:p-8">
                 <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 flex-1">
+                  <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-800 flex-1">
                     {selectedEvent.event?.title}
                   </h2>
                 </div>
@@ -362,7 +362,7 @@ export default function RegisteredEvents() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
-                      <CalendarDays size={18} className="text-orange-500 mt-0.5" />
+                      <CalendarDays size={18} className="text-orange-500 mt-0.5 shrink-0" />
                       <div>
                         <div className="text-sm text-slate-500">Date</div>
                         <div className="font-medium text-slate-800">
@@ -377,15 +377,15 @@ export default function RegisteredEvents() {
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <MapPin size={18} className="text-orange-500 mt-0.5" />
-                      <div>
+                      <MapPin size={18} className="text-orange-500 mt-0.5 shrink-0" />
+                      <div className="min-w-0">
                         <div className="text-sm text-slate-500">Venue</div>
-                        <div className="font-medium text-slate-800">{selectedEvent.event?.venue}</div>
+                        <div className="font-medium text-slate-800 break-words">{selectedEvent.event?.venue}</div>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Ticket size={18} className="text-orange-500 mt-0.5" />
+                      <Ticket size={18} className="text-orange-500 mt-0.5 shrink-0" />
                       <div>
                         <div className="text-sm text-slate-500">Tickets</div>
                         <div className="font-medium text-slate-800">{selectedEvent.ticketsBooked || 1} tickets</div>
@@ -420,7 +420,7 @@ export default function RegisteredEvents() {
                   </p>
                 </div>
 
-                <div className="mt-8 flex gap-3">
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
                   <button
                     onClick={() => setShowQRModal(selectedEvent)}
                     className="flex-1 px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-all shadow-md flex items-center justify-center gap-2 font-medium"
@@ -442,8 +442,8 @@ export default function RegisteredEvents() {
 
         {/* QR Code Modal */}
         {showQRModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fadeIn">
-            <div className="bg-white rounded-2xl max-w-md w-full p-8 text-center shadow-2xl">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-3 sm:p-4 animate-fadeIn">
+            <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-8 text-center shadow-2xl max-h-[92vh] overflow-y-auto">
               <div className="mb-4">
                 <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <QrCode size={40} className="text-orange-600" />
@@ -453,24 +453,24 @@ export default function RegisteredEvents() {
               </div>
 
               {/* Simulated QR Code */}
-              <div className="bg-slate-800 p-6 rounded-2xl mb-6 inline-block mx-auto">
-                <div className="w-48 h-48 bg-white rounded-lg flex items-center justify-center">
+              <div className="bg-slate-800 p-4 sm:p-6 rounded-2xl mb-6 inline-block mx-auto">
+                <div className="w-40 h-40 sm:w-48 sm:h-48 bg-white rounded-lg flex items-center justify-center">
                   <div className="text-center">
                     <Ticket size={60} className="text-slate-800 mx-auto mb-2" />
-                    <div className="text-xs text-slate-600 font-mono">QR-{showQRModal._id}</div>
+                    <div className="text-xs text-slate-600 font-mono break-all px-2">QR-{showQRModal._id}</div>
                     <div className="text-xs text-slate-500 mt-1">Ticket #{Math.random().toString(36).substr(2, 8).toUpperCase()}</div>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2 text-left bg-slate-50 p-4 rounded-xl mb-6">
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-sm gap-2">
                   <span className="text-slate-600">Ticket Holder:</span>
-                  <span className="font-medium text-slate-800">{showQRModal.attendeeName}</span>
+                  <span className="font-medium text-slate-800 text-right truncate">{showQRModal.attendeeName}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-sm gap-2">
                   <span className="text-slate-600">Email:</span>
-                  <span className="font-medium text-slate-800">{showQRModal.attendeeEmail}</span>
+                  <span className="font-medium text-slate-800 text-right truncate">{showQRModal.attendeeEmail}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">Tickets:</span>
@@ -484,7 +484,7 @@ export default function RegisteredEvents() {
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => setShowQRModal(null)}
                   className="flex-1 px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-all font-medium"
