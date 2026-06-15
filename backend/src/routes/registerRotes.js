@@ -7,7 +7,8 @@ import {
   checkInAttendee,
   getRegistrationById,
   getOrganizerRegistrations,
-  updateRegistration
+  updateRegistration,
+  cancelRegistration
 } from "../controllers/registerController.js";
 
 const router = express.Router();
@@ -21,5 +22,6 @@ router.get("/event/:eventId", getEventRegistrations);
 router.put("/checkin/:id", checkInAttendee);
 router.get("/:id", getRegistrationById);
 router.put("/:id", updateRegistration);
+router.delete("/:id", cancelRegistration);
 
 export default router;

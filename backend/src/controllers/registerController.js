@@ -151,3 +151,35 @@ export const updateRegistration = async (req, res) => {
     });
   }
 };
+
+export const cancelRegistration = async (req, res) => {
+  try {
+    const registration = await Registration.findById(req.params.id);
+
+    if (!registration) {
+      return res.status(404).json({
+        success: false,
+        message: "Registration not found",
+      });
+    }
+
+    const event = await Event.findById(registration.event);
+
+    if (event) {
+      event.availableTickets += registration.ticketsBooked;
+      await event.save();
+    }
+
+    await Registration.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Registration cancelled successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
