@@ -10,6 +10,7 @@ import FeedbackPage from "./AudienceFeedback.jsx";
 const myEvents = ["Registered Events", "Upcoming Events", "Completed Events"];
 
 export default function UserDashboard({ onBackHome, onLogout }) {
+  const user = JSON.parse(localStorage.getItem("user"));
   const [activeLink, setActiveLink] = useState("browse");
   const [myEventsOpen, setMyEventsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -152,7 +153,7 @@ export default function UserDashboard({ onBackHome, onLogout }) {
               className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-black border-0 cursor-pointer transition-opacity hover:opacity-90"
               style={{ background: "linear-gradient(135deg,#f97316,#ea580c)" }}
             >
-              U
+              {user?.name?.charAt(0).toUpperCase()}
             </button>
 
             {profileOpen && (
