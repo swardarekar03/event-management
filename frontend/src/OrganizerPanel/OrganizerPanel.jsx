@@ -1,4 +1,4 @@
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import {
   Bell,
@@ -556,56 +556,91 @@ function Registrations() {
 }
 
 // ── QR CHECK-IN ──
+// ── QR CHECK-IN ──
 function QRCheckin() {
-  const [scanned, setScanned] = useState(false);
+  const [cameraActive, setCameraActive]   = useState(false);
+  const [input, setInput]                 = useState("");
+  const [result, setResult]               = useState(null);
   const [recentCheckins, setRecentCheckins] = useState([]);
-  const [input, setInput] = useState("");
-  const [error, setError] = useState("");
+  const html5QrRef = useRef(null);
+  const scannerDivId = "qr-reader";
 
   const fetchRecentCheckins = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`http://localhost:5000/api/registrations/organizer`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await axios.get(`http://localhost:${PORT}/api/registrations/organizer`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success && Array.isArray(res.data.registrations)) {
-        const checkedIn = res.data.registrations
-          .filter(r => r.checkInStatus)
-          .map(r => ({
-            id: r._id,
-            name: r.attendeeName,
-            event: r.event?.title || "Event"
-          }));
-        setRecentCheckins(checkedIn);
+        setRecentCheckins(
+          res.data.registrations
+            .filter((r) => r.checkInStatus)
+            .map((r) => ({ id: r._id, name: r.attendeeName, event: r.event?.title || "Event" }))
+        );
+      }
+    } catch (err) { console.error("Failed to load recent checkins", err); }
+  };
+
+  useEffect(() => { fetchRecentCheckins(); }, []);
+
+  useEffect(() => { return () => { stopCamera(); }; }, []);
+
+  const startCamera = async () => {
+    setResult(null);
+    setCameraActive(true);
+    setTimeout(async () => {
+      try {
+        const { Html5Qrcode } = await import("html5-qrcode");
+        const qr = new Html5Qrcode(scannerDivId);
+        html5QrRef.current = qr;
+        await qr.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 220, height: 220 } },
+          async (decodedText) => {
+            await stopCamera();
+            await verifyCheckin(decodedText);
+          },
+          () => {}
+        );
+      } catch (err) {
+        console.error("Camera error:", err);
+        setResult({ success: false, message: "Could not access camera. Check browser permissions." });
+        setCameraActive(false);
+      }
+    }, 100);
+  };
+
+  const stopCamera = async () => {
+    if (html5QrRef.current) {
+      try { await html5QrRef.current.stop(); html5QrRef.current.clear(); html5QrRef.current = null; } catch {}
+    }
+    setCameraActive(false);
+  };
+
+  const verifyCheckin = async (id) => {
+    if (!id?.trim()) return;
+    setResult(null);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(
+        `http://localhost:${PORT}/api/registrations/checkin/${id.trim()}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data.success) {
+        const reg = res.data.registration;
+        setResult({ success: true, message: "Attendance verified!", attendee: reg.attendeeName, event: reg.event?.title });
+        fetchRecentCheckins();
       }
     } catch (err) {
-      console.error("Failed to load recent checkins", err);
+      setResult({ success: false, message: err.response?.data?.message || "Verification failed" });
     }
   };
 
-  useEffect(() => {
-    fetchRecentCheckins();
-  }, []);
-
-  const handleScan = async (e) => {
+  const handleManualSubmit = async (e) => {
     e.preventDefault();
-    if (!input.trim()) return;
-    setError("");
-    setScanned(false);
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.put(`http://localhost:5000/api/registrations/checkin/${input.trim()}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.data.success) {
-        setScanned(true);
-        setError("");
-        fetchRecentCheckins();
-        setInput("");
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to verify check-in");
-    }
+    await verifyCheckin(input);
+    setInput("");
   };
 
   return (
@@ -614,42 +649,80 @@ function QRCheckin() {
       <div className="grid grid-cols-2 gap-5">
         <Card>
           <h3 className="text-sm font-bold text-gray-800 mt-0 mb-4">Scan QR Code</h3>
-          <div className="bg-orange-50 rounded-xl flex items-center justify-center h-44 border-2 border-dashed border-orange-200 mb-4">
-            <div className="text-center text-orange-300">
-              <QrCode size={40} className="mx-auto mb-1.5" />
-              <p className="text-[11px] m-0">Camera scanner goes here</p>
-            </div>
+
+          {/* Camera viewport */}
+          <div className="relative mb-4 rounded-xl overflow-hidden bg-gray-900 flex items-center justify-center min-h-[220px]">
+            <div id={scannerDivId} className={`w-full ${cameraActive ? "block" : "hidden"}`} />
+            {!cameraActive && (
+              <div className="flex flex-col items-center justify-center gap-2 py-10 text-gray-500">
+                <QrCode size={40} className="text-orange-300" />
+                <p className="text-[12px] m-0">Camera is off</p>
+              </div>
+            )}
+            {cameraActive && (
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div className="relative w-44 h-44">
+                  <span className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-orange-400 rounded-tl" />
+                  <span className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-orange-400 rounded-tr" />
+                  <span className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-orange-400 rounded-bl" />
+                  <span className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-orange-400 rounded-br" />
+                </div>
+              </div>
+            )}
           </div>
-          <form onSubmit={handleScan} className="flex gap-2">
-            <input value={input} onChange={e => setInput(e.target.value)}
+
+          <div className="mb-4">
+            {!cameraActive ? (
+              <Btn full onClick={startCamera}>📷 Start Camera</Btn>
+            ) : (
+              <Btn full variant="ghost" onClick={stopCamera}>⏹ Stop Camera</Btn>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex-1 h-px bg-orange-100" />
+            <span className="text-[11px] text-gray-400 font-semibold">or enter manually</span>
+            <div className="flex-1 h-px bg-orange-100" />
+          </div>
+
+          <form onSubmit={handleManualSubmit} className="flex gap-2">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Enter Registration ID"
               className="flex-1 border border-orange-100 rounded-xl px-3 py-[9px] text-[13px] outline-none focus:border-orange-300 transition-colors"
-              placeholder="Or enter ticket ID manually" />
+            />
             <Btn type="submit">Verify</Btn>
           </form>
-          {scanned && (
-            <div className="bg-green-50 border border-green-200 text-green-700 text-[13px] rounded-xl px-4 py-3 mt-3 font-semibold">
-              ✓ Attendance verified successfully.
-            </div>
-          )}
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-[13px] rounded-xl px-4 py-3 mt-3 font-semibold">
-              ✗ {error}
+
+          {result && (
+            <div className={`mt-4 px-4 py-3 rounded-xl border text-[13px] font-semibold ${
+              result.success ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-600"
+            }`}>
+              {result.success ? "✓" : "✗"} {result.message}
+              {result.success && result.attendee && (
+                <p className="m-0 mt-0.5 text-[12px] font-normal">{result.attendee} — {result.event}</p>
+              )}
             </div>
           )}
         </Card>
+
         <Card>
-          <h3 className="text-sm font-bold text-gray-800 mt-0 mb-4">Recent Check-ins</h3>
+          <h3 className="text-sm font-bold text-gray-800 mt-0 mb-4">
+            Recent Check-ins
+            <span className="ml-2 text-[11px] font-bold bg-orange-50 text-orange-500 px-2 py-0.5 rounded-full">{recentCheckins.length}</span>
+          </h3>
           <div className="flex flex-col gap-3.5 max-h-[300px] overflow-y-auto">
             {recentCheckins.length === 0 ? (
               <p className="text-gray-400 text-[13px] m-0">No checked-in attendees yet.</p>
             ) : (
-              recentCheckins.map(p => (
+              recentCheckins.map((p) => (
                 <div key={p.id} className="flex items-center justify-between border-b border-orange-50/60 pb-2 last:border-b-0">
                   <div>
                     <p className="font-semibold text-[13px] text-gray-800 m-0">{p.name}</p>
                     <p className="text-[11px] text-gray-400 mt-0.5">{p.event}</p>
                   </div>
-                  <span className="text-[11px] font-bold bg-orange-50 text-orange-500 px-[10px] py-1 rounded-full">Checked in</span>
+                  <span className="text-[11px] font-bold bg-orange-50 text-orange-500 px-[10px] py-1 rounded-full">✓ Checked in</span>
                 </div>
               ))
             )}

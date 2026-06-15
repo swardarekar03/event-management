@@ -12,42 +12,40 @@ const statusStyles = {
 
 const categoryColors = {
   Technology: "bg-gradient-to-br from-purple-600/80 to-orange-400/75",
-  Workshop: "bg-gradient-to-br from-indigo-700/80 to-sky-400/70",
-  Sports: "bg-gradient-to-br from-green-600/75 to-orange-400/70",
-  Cultural: "bg-gradient-to-br from-purple-500/80 to-teal-400/70",
-  Business: "bg-gradient-to-br from-indigo-600/80 to-sky-400/70",
-  Music: "bg-gradient-to-br from-purple-700/80 to-orange-400/75",
-  Other: "bg-gradient-to-br from-purple-600/80 to-orange-400/75",
+  Workshop:   "bg-gradient-to-br from-indigo-700/80 to-sky-400/70",
+  Sports:     "bg-gradient-to-br from-green-600/75 to-orange-400/70",
+  Cultural:   "bg-gradient-to-br from-purple-500/80 to-teal-400/70",
+  Business:   "bg-gradient-to-br from-indigo-600/80 to-sky-400/70",
+  Music:      "bg-gradient-to-br from-purple-700/80 to-orange-400/75",
+  Other:      "bg-gradient-to-br from-purple-600/80 to-orange-400/75",
 };
 
 export default function Tickets() {
-  const [activeTab, setActiveTab] = useState("Upcoming");
+  const [activeTab, setActiveTab]           = useState("Upcoming");
   const [selectedTicket, setSelectedTicket] = useState(null);
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tickets, setTickets]               = useState([]);
+  const [loading, setLoading]               = useState(true);
 
   useEffect(() => {
     (async () => {
       const token = localStorage.getItem("token");
-
-      if (!token) {
-        setLoading(false);
-        return;
-      }
+      if (!token) { setLoading(false); return; }
       try {
-        const res = await fetch(
-          "http://localhost:5000/api/registrations",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await fetch("http://localhost:5000/api/registrations", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const data = await res.json();
         if (data.success) {
-          setTickets(data.registrations);
+          const mapped = data.registrations.map((r) => ({
+            ...r,
+            event: r.event,
+            ticketsBooked: r.ticketsBooked,
+            qrCode: JSON.stringify({ registrationId: r._id, eventId: r.event?._id }),
+          }));
+          setTickets(mapped);
+        } else {
+          console.error("Failed to fetch tickets:", data.message);
         }
-        else console.error("Failed to fetch tickets:", data.message);
       } catch (err) {
         console.error("Error fetching tickets:", err);
       } finally {
@@ -58,18 +56,11 @@ export default function Tickets() {
 
   const getTicketStatus = (ticket) => {
     if (!ticket.event) return "Cancelled";
-
-    if (ticket.paymentStatus === "failed")
-      return "Cancelled";
-
+    if (ticket.paymentStatus === "failed") return "Cancelled";
     if (!ticket.event?.date) return "Cancelled";
-
     const eventDate = new Date(ticket.event.date);
     eventDate.setHours(23, 59, 59, 999);
-
-    return eventDate >= new Date()
-      ? "Upcoming"
-      : "Past";
+    return eventDate >= new Date() ? "Upcoming" : "Past";
   };
 
   const filteredTickets = useMemo(
@@ -94,10 +85,11 @@ export default function Tickets() {
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`px-4 h-9 rounded-lg text-sm font-semibold border-0 cursor-pointer transition-all ${activeTab === tab
-                ? "bg-orange-500 text-white shadow-md shadow-orange-200"
-                : "bg-white/80 text-stone-500 hover:text-orange-500 hover:bg-orange-50"
-                }`}
+              className={`px-4 h-9 rounded-lg text-sm font-semibold border-0 cursor-pointer transition-all ${
+                activeTab === tab
+                  ? "bg-orange-500 text-white shadow-md shadow-orange-200"
+                  : "bg-white/80 text-stone-500 hover:text-orange-500 hover:bg-orange-50"
+              }`}
             >
               {tab}
             </button>
@@ -121,17 +113,14 @@ export default function Tickets() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredTickets.map((ticket) => {
             const status = getTicketStatus(ticket);
-            const event = ticket.event || {};
+            const event  = ticket.event || {};
             return (
               <article
                 key={ticket._id}
                 className="rounded-xl border border-stone-200/60 bg-white/80 shadow-md overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-orange-300/50"
               >
-                {/* Category banner */}
                 <div className={`h-2 w-full ${categoryColors[event?.category] || categoryColors.Other}`} />
-
                 <div className="p-5">
-                  {/* Header row */}
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-bold text-stone-400 uppercase tracking-wide">
                       {event?.category || "Event"}
@@ -141,17 +130,15 @@ export default function Tickets() {
                     </span>
                   </div>
 
-                  {/* Event name */}
                   <h3 className="m-0 mb-4 text-stone-900 font-black text-base leading-snug">
                     {event?.title || "Event"}
                   </h3>
 
-                  {/* Info rows */}
                   <div className="flex flex-col gap-2 mb-4">
                     {[
                       { icon: <CalendarDays size={14} />, label: event?.date ? new Date(event.date).toDateString() : "—" },
-                      { icon: <Clock size={14} />, label: event?.time || "—" },
-                      { icon: <MapPin size={14} />, label: event?.venue || "—" },
+                      { icon: <Clock size={14} />,        label: event?.time || "—" },
+                      { icon: <MapPin size={14} />,       label: event?.venue || "—" },
                     ].map(({ icon, label }) => (
                       <div key={label} className="flex items-center gap-2 text-stone-500 text-xs [&>svg]:text-orange-400 [&>svg]:flex-shrink-0">
                         {icon}{label}
@@ -159,13 +146,11 @@ export default function Tickets() {
                     ))}
                   </div>
 
-                  {/* Booking ID */}
                   <div className="flex items-center gap-1.5 text-xs text-stone-400 mb-4">
                     <Ticket size={12} className="text-orange-400" />
                     <span>{ticket.ticketsBooked} Ticket(s)</span>
                   </div>
 
-                  {/* Action */}
                   <button
                     type="button"
                     onClick={() => setSelectedTicket(ticket)}
@@ -190,7 +175,6 @@ export default function Tickets() {
             className="relative w-full max-w-md rounded-2xl bg-[#fffaf5] border border-white/30 shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close */}
             <button
               type="button"
               onClick={() => setSelectedTicket(null)}
@@ -200,7 +184,6 @@ export default function Tickets() {
               <X size={16} className="text-stone-700" />
             </button>
 
-            {/* Category banner */}
             <div className={`h-24 w-full flex items-end p-4 relative ${categoryColors[selectedTicket.event?.category] || categoryColors.Other}`}>
               <div className="absolute inset-0 bg-gradient-to-t from-stone-900/50 to-transparent" />
               <span className="relative z-10 text-xs font-bold text-white bg-stone-900/40 px-2.5 py-1 rounded-full">
@@ -214,7 +197,6 @@ export default function Tickets() {
                 Official entry pass · Valid for {selectedTicket.ticketsBooked} person{selectedTicket.ticketsBooked !== 1 ? "s" : ""}
               </p>
 
-              {/* Details */}
               <div className="flex flex-col gap-3 mb-5">
                 {[
                   {
@@ -222,8 +204,8 @@ export default function Tickets() {
                     label: "Date & Time",
                     value: `${selectedTicket.event?.date ? new Date(selectedTicket.event.date).toDateString() : "—"} at ${selectedTicket.event?.time || "—"}`,
                   },
-                  { icon: <MapPin size={16} />, label: "Venue", value: selectedTicket.event?.venue || "—" },
-                  { icon: <Ticket size={16} />, label: "Ticket Price", value: `₹${selectedTicket.event?.price ?? 0}` },
+                  { icon: <MapPin size={16} />,  label: "Venue",        value: selectedTicket.event?.venue || "—" },
+                  { icon: <Ticket size={16} />,  label: "Ticket Price", value: `₹${selectedTicket.event?.price ?? 0}` },
                 ].map(({ icon, label, value }) => (
                   <div key={label} className="flex items-start gap-3 p-3 rounded-lg bg-orange-50/60 [&>svg]:text-orange-500 [&>svg]:flex-shrink-0 [&>svg]:mt-0.5">
                     {icon}
@@ -235,18 +217,15 @@ export default function Tickets() {
                 ))}
               </div>
 
-              {/* QR */}
               <div className="flex flex-col items-center gap-3 py-4 border-t border-dashed border-stone-200">
                 <div className="p-3 rounded-xl bg-white shadow-sm">
                   <QRCode
-                    value={JSON.stringify({
-                      registrationId: selectedTicket._id,
-                      eventId: selectedTicket.event?._id,
-                    })}
+                    value={selectedTicket.qrCode || selectedTicket._id}
                     size={120}
                     bgColor="#FFFFFF"
                     fgColor="#f97316"
-                  />              </div>
+                  />
+                </div>
                 <div className="text-center">
                   <p className="m-0 text-xs text-stone-400 font-bold uppercase tracking-wide mb-1">Booking ID</p>
                   <code className="text-sm font-mono font-bold text-stone-700 bg-stone-100 px-3 py-1 rounded-lg">
