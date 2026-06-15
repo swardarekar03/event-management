@@ -53,8 +53,13 @@ export default function RegisteredEvents() {
       });
 
       if (res.data.success) {
-        setRegistrations(res.data.registrations);
-      } else {
+        setRegistrations(
+          res.data.registrations.filter(
+            (r) => r.status !== "cancelled"
+          )
+        );
+      }
+      else {
         setError("Failed to load registrations");
       }
     } catch (err) {
@@ -118,7 +123,10 @@ export default function RegisteredEvents() {
 
       if (res.data.success) {
         alert("Registration cancelled successfully!");
-        fetchRegistrations();
+
+        setRegistrations((prev) =>
+          prev.filter((r) => r._id !== registrationId)
+        );
       }
     } catch (err) {
       console.error("Cancel error:", err);
