@@ -8,6 +8,7 @@ import UserDashboard from "./UserPanel/UserDashoboard";
 import OrganizerPanel from "./OrganizerPanel/OrganizerPanel";
 import AdminDashboard from "./AdminPanel/AdminDashboard";
 import Notification from "./UserPanel/AudienceNotificationsPanel.jsx";
+import Tickets from "./UserPanel/Tickets.jsx";
 
 // ── Guard: only logged-in users with a matching role ──────────────────────────
 function PrivateRoute({ children, requiredRole }) {
@@ -40,6 +41,7 @@ function AppRoutes() {
       <Route path="/login"          element={<Login />} />
       <Route path="/signup"         element={<Signup />} />
       <Route path="/organizer-signup" element={<OrganizerSignup />} />
+      <Route path="/ticket/:id" element={<Tickets />} />
 
       {/* ── Protected: regular users ── */}
       <Route

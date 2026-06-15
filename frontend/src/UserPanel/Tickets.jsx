@@ -1,50 +1,96 @@
-import { CalendarDays, Clock, MapPin, Ticket, X, Eye } from "lucide-react";
+import { CalendarDays, Clock, MapPin, Ticket, X, Eye, ArrowLeft } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import QRCode from "react-qr-code";
 
 const TABS = ["Upcoming", "Past", "Cancelled"];
 
 const statusStyles = {
-  Upcoming:  "bg-orange-50 text-orange-500 border border-orange-200",
-  Past:      "bg-stone-100 text-stone-500 border border-stone-200",
+  Upcoming: "bg-orange-50 text-orange-500 border border-orange-200",
+  Past: "bg-stone-100 text-stone-500 border border-stone-200",
   Cancelled: "bg-red-50 text-red-400 border border-red-200",
 };
 
 const categoryColors = {
   Technology: "bg-gradient-to-br from-purple-600/80 to-orange-400/75",
-  Workshop:   "bg-gradient-to-br from-indigo-700/80 to-sky-400/70",
-  Sports:     "bg-gradient-to-br from-green-600/75 to-orange-400/70",
-  Cultural:   "bg-gradient-to-br from-purple-500/80 to-teal-400/70",
-  Business:   "bg-gradient-to-br from-indigo-600/80 to-sky-400/70",
-  Music:      "bg-gradient-to-br from-purple-700/80 to-orange-400/75",
-  Other:      "bg-gradient-to-br from-purple-600/80 to-orange-400/75",
+  Workshop: "bg-gradient-to-br from-indigo-700/80 to-sky-400/70",
+  Sports: "bg-gradient-to-br from-green-600/75 to-orange-400/70",
+  Cultural: "bg-gradient-to-br from-purple-500/80 to-teal-400/70",
+  Business: "bg-gradient-to-br from-indigo-600/80 to-sky-400/70",
+  Music: "bg-gradient-to-br from-purple-700/80 to-orange-400/75",
+  Other: "bg-gradient-to-br from-purple-600/80 to-orange-400/75",
 };
 
 export default function Tickets() {
-  const [activeTab, setActiveTab]           = useState("Upcoming");
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("Upcoming");
   const [selectedTicket, setSelectedTicket] = useState(null);
-  const [tickets, setTickets]               = useState([]);
-  const [loading, setLoading]               = useState(true);
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isSingleTicketView, setIsSingleTicketView] = useState(false);
 
   useEffect(() => {
     (async () => {
       const token = localStorage.getItem("token");
-      if (!token) { setLoading(false); return; }
+      if (!token) {
+        setLoading(false);
+        return;
+      }
       try {
-        const res = await fetch("https://event-management-ak5b.onrender.com/api/registrations", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (data.success) {
-          const mapped = data.registrations.map((r) => ({
-            ...r,
-            event: r.event,
-            ticketsBooked: r.ticketsBooked,
-            qrCode: JSON.stringify({ registrationId: r._id, eventId: r.event?._id }),
-          }));
-          setTickets(mapped);
+        // If there's an ID in the URL, fetch ONLY that specific ticket
+        if (id) {
+          setIsSingleTicketView(true);
+          const res = await fetch(`https://event-management-ak5b.onrender.com/api/registrations/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            const singleTicket = {
+              ...data.registration,
+              event: data.registration.event,
+              ticketsBooked: data.registration.ticketsBooked,
+              qrCode: JSON.stringify({
+                registrationId: data.registration._id,
+                eventId: data.registration.event?._id
+              }),
+            };
+            setTickets([singleTicket]);
+            // Auto-open the modal for single ticket view
+            setSelectedTicket(singleTicket);
+          } else {
+            console.error("Failed to fetch ticket:", data.message);
+          }
         } else {
-          console.error("Failed to fetch tickets:", data.message);
+          setIsSingleTicketView(false);
+          const res = await fetch("https://event-management-ak5b.onrender.com/api/registrations", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            const expandedTickets = data.registrations.flatMap((r) =>
+              Array.from(
+                { length: r.ticketsBooked || 1 },
+                (_, index) => ({
+                  ...r,
+                  ticketNumber: index + 1,
+                  uniqueTicketId: `${r._id}-${index + 1}`,
+                  qrCode: JSON.stringify({
+                    registrationId: r._id,
+                    eventId: r.event?._id,
+                    ticketNumber: index + 1,
+                  }),
+                })
+              )
+            );
+
+            setTickets(expandedTickets);
+          }
+          else {
+            console.error("Failed to fetch tickets:", data.message);
+          }
         }
       } catch (err) {
         console.error("Error fetching tickets:", err);
@@ -52,7 +98,7 @@ export default function Tickets() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [id]);
 
   const getTicketStatus = (ticket) => {
     if (!ticket.event) return "Cancelled";
@@ -68,6 +114,7 @@ export default function Tickets() {
     [activeTab, tickets]
   );
 
+  // Regular view (all tickets) - your existing code
   return (
     <>
       {/* ── Hero ── */}
@@ -85,11 +132,10 @@ export default function Tickets() {
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`px-4 h-9 rounded-lg text-sm font-semibold border-0 cursor-pointer transition-all whitespace-nowrap ${
-                activeTab === tab
-                  ? "bg-orange-500 text-white shadow-md shadow-orange-200"
-                  : "bg-white/80 text-stone-500 hover:text-orange-500 hover:bg-orange-50"
-              }`}
+              className={`px-4 h-9 rounded-lg text-sm font-semibold border-0 cursor-pointer transition-all whitespace-nowrap ${activeTab === tab
+                ? "bg-orange-500 text-white shadow-md shadow-orange-200"
+                : "bg-white/80 text-stone-500 hover:text-orange-500 hover:bg-orange-50"
+                }`}
             >
               {tab}
             </button>
@@ -113,16 +159,15 @@ export default function Tickets() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredTickets.map((ticket) => {
             const status = getTicketStatus(ticket);
-            const event  = ticket.event || {};
+            const event = ticket.event || {};
             return (
               <article
-                key={ticket._id}
+                key={ticket.uniqueTicketId}
                 className="rounded-xl border border-stone-200/60 bg-white/80 shadow-md overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-orange-300/50"
               >
                 <div className={`h-2 w-full ${categoryColors[event?.category] || categoryColors.Other}`} />
 
                 <div className="p-4 sm:p-5">
-                  {/* Header row */}
                   <div className="flex items-center justify-between mb-3 gap-2">
                     <span className="text-xs font-bold text-stone-400 uppercase tracking-wide truncate">
                       {event?.category || "Event"}
@@ -132,15 +177,21 @@ export default function Tickets() {
                     </span>
                   </div>
 
-                  <h3 className="m-0 mb-4 text-stone-900 font-black text-base leading-snug">
-                    {event?.title || "Event"}
-                  </h3>
+                  <div>
+                    <h3 className="m-0 text-stone-900 font-black text-base leading-snug">
+                      {event?.title || "Event"}
+                    </h3>
+
+                    <p className="text-xs text-orange-500 font-semibold mt-1">
+                      Ticket #{ticket.ticketNumber}
+                    </p>
+                  </div>
 
                   <div className="flex flex-col gap-2 mb-4">
                     {[
                       { icon: <CalendarDays size={14} />, label: event?.date ? new Date(event.date).toDateString() : "—" },
-                      { icon: <Clock size={14} />,        label: event?.time || "—" },
-                      { icon: <MapPin size={14} />,       label: event?.venue || "—" },
+                      { icon: <Clock size={14} />, label: event?.time || "—" },
+                      { icon: <MapPin size={14} />, label: event?.venue || "—" },
                     ].map(({ icon, label }) => (
                       <div key={label} className="flex items-center gap-2 text-stone-500 text-xs [&>svg]:text-orange-400 [&>svg]:flex-shrink-0">
                         {icon}<span className="truncate">{label}</span>
@@ -167,8 +218,8 @@ export default function Tickets() {
         </div>
       )}
 
-      {/* ── Ticket modal ── */}
-      {selectedTicket && (
+      {/* ── Ticket modal (for all tickets view) ── */}
+      {selectedTicket && !isSingleTicketView && (
         <div
           className="fixed inset-0 z-50 grid place-items-center p-3 sm:p-6 bg-stone-900/50 backdrop-blur-sm"
           onClick={() => setSelectedTicket(null)}
@@ -206,7 +257,7 @@ export default function Tickets() {
                     label: "Date & Time",
                     value: `${selectedTicket.event?.date ? new Date(selectedTicket.event.date).toDateString() : "—"} at ${selectedTicket.event?.time || "—"}`,
                   },
-                  { icon: <MapPin size={16} />, label: "Venue",        value: selectedTicket.event?.venue || "—" },
+                  { icon: <MapPin size={16} />, label: "Venue", value: selectedTicket.event?.venue || "—" },
                   { icon: <Ticket size={16} />, label: "Ticket Price", value: `₹${selectedTicket.event?.price ?? 0}` },
                 ].map(({ icon, label, value }) => (
                   <div key={label} className="flex items-start gap-3 p-3 rounded-lg bg-orange-50/60 [&>svg]:text-orange-500 [&>svg]:flex-shrink-0 [&>svg]:mt-0.5">
@@ -231,7 +282,7 @@ export default function Tickets() {
                 <div className="text-center">
                   <p className="m-0 text-xs text-stone-400 font-bold uppercase tracking-wide mb-1">Booking ID</p>
                   <code className="text-sm font-mono font-bold text-stone-700 bg-stone-100 px-3 py-1 rounded-lg break-all">
-                    {selectedTicket._id}
+                    {selectedTicket.uniqueTicketId}
                   </code>
                 </div>
               </div>
@@ -250,4 +301,4 @@ export default function Tickets() {
       )}
     </>
   );
-} 
+}

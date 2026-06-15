@@ -119,3 +119,35 @@ export const getOrganizerRegistrations = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const updateRegistration = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { ticketsBooked } = req.body;
+
+    const registration = await Registration.findById(id);
+
+    if (!registration) {
+      return res.status(404).json({
+        success: false,
+        message: "Registration not found",
+      });
+    }
+
+    registration.ticketsBooked = ticketsBooked;
+
+    await registration.save();
+
+    res.status(200).json({
+      success: true,
+      registration,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

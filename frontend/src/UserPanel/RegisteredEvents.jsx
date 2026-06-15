@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+// import Tickets from "./Tickets.jsx";
+import QRCode from "react-qr-code";
 import {
   CalendarDays,
   MapPin,
@@ -19,11 +22,17 @@ import {
 const PORT = 5000;
 
 export default function RegisteredEvents() {
+
+  const navigate = useNavigate();
+
+  const [showTicketModal, setShowTicketModal] = useState(null);
+
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [showQRModal, setShowQRModal] = useState(null);
+  // const [showQRModal, setShowQRModal] = useState(null);
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("upcoming");
 
   // Fetch real registrations from API
   useEffect(() => {
@@ -52,7 +61,47 @@ export default function RegisteredEvents() {
       console.error("Fetch error:", err);
       setError(err.response?.data?.message || "Failed to load registrations");
     } finally {
-      setLoading(false);
+      loading && setLoading(false);
+    }
+  };
+
+  const updateTicketQuantity = async (registration, newQuantity) => {
+    if (newQuantity < 1) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(
+        `https://event-management-ak5b.onrender.com/api/registrations/${registration._id}`,
+        { ticketsBooked: newQuantity },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res.data.success) {
+        setRegistrations(prevRegistrations =>
+          prevRegistrations.map(reg =>
+            reg._id === registration._id
+              ? { ...reg, ticketsBooked: newQuantity }
+              : reg
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Update error:", err);
+      alert(err.response?.data?.message || "Failed to update ticket quantity");
+    }
+  };
+
+  const handleIncreaseTickets = (registration) => {
+    const currentTickets = registration.ticketsBooked || 1;
+    const newQuantity = currentTickets + 1;
+    updateTicketQuantity(registration, newQuantity);
+  };
+
+  const handleDecreaseTickets = (registration) => {
+    const currentTickets = registration.ticketsBooked || 1;
+    if (currentTickets > 1) {
+      const newQuantity = currentTickets - 1;
+      updateTicketQuantity(registration, newQuantity);
     }
   };
 
@@ -69,8 +118,6 @@ export default function RegisteredEvents() {
 
       if (res.data.success) {
         alert("Registration cancelled successfully!");
-        
-        // Also update the event's available tickets (backend handles this, just refresh)
         fetchRegistrations();
       }
     } catch (err) {
@@ -79,32 +126,42 @@ export default function RegisteredEvents() {
     }
   };
 
-  const handleMoreTickets = (registration) => {
-    // Redirect to event detail page to book more tickets
-    window.location.href = `/events/${registration.event._id}`;
-  };
-
   const handleViewTicket = (registration) => {
-    setShowQRModal(registration);
+    // navigate(`/ticket/${registration._id}`);
+    setShowTicketModal(registration);
   };
 
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'confirmed':
-        return 'bg-emerald-100 text-emerald-700';
-      case 'pending':
-        return 'bg-amber-100 text-amber-700';
+  const getFilteredEvents = () => {
+    const now = new Date();
+    switch (activeTab) {
+      case "upcoming":
+        return registrations.filter(r =>
+          !r.checkInStatus && r.event?.date && new Date(r.event.date) > now
+        );
+      case "past":
+        return registrations.filter(r =>
+          r.checkInStatus || (r.event?.date && new Date(r.event.date) <= now)
+        );
       default:
-        return 'bg-gray-100 text-gray-700';
+        return registrations;
     }
+  };
+
+  // Helper function to match card gradients with UI spec image categories
+  const getCategoryGradient = (category) => {
+    const normalized = category?.toLowerCase() || "";
+    if (normalized.includes("tech")) return "from-[#a353cd] to-[#876251]";
+    if (normalized.includes("business")) return "from-[#4d77d7] to-[#4b6680]";
+    if (normalized.includes("workshop")) return "from-[#4f7cdb] to-[#3d6874]";
+    return "from-[#a546be] to-[#8d6253]"; // Default fallback gradient ("Other")
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#eee7df] flex items-center justify-center">
         <div className="text-center">
           <div className="text-2xl mb-4">🎫</div>
-          <p className="text-slate-500">Loading your registrations...</p>
+          <p className="text-[#a09990] font-medium">Loading your registrations...</p>
         </div>
       </div>
     );
@@ -112,12 +169,12 @@ export default function RegisteredEvents() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#eee7df] flex items-center justify-center px-4">
         <div className="text-center max-w-md p-6 bg-white rounded-2xl shadow-md">
           <p className="text-red-500 mb-4">{error}</p>
-          <button 
+          <button
             onClick={fetchRegistrations}
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg"
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
           >
             Retry
           </button>
@@ -126,206 +183,168 @@ export default function RegisteredEvents() {
     );
   }
 
+  const filteredEvents = getFilteredEvents();
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        
-        {/* Hero Section */}
-        <div className="text-center mb-10 sm:mb-12">
-          <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-600 px-4 py-2 rounded-full mb-4">
-            <Sparkles size={16} />
-            <span className="text-sm font-semibold tracking-wide">MY EVENTS</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
-            Your Registered Events
-          </h1>
-          <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto">
-            Manage all events you've registered for and get ready for amazing experiences.
-          </p>
-        </div>
+    <div className="min-h-screen bg-[#eee7df] py-10 px-6 font-sans">
+      <div className="max-w-7xl mx-auto">
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-10 sm:mb-12">
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-            <div className="text-2xl font-bold text-orange-600">{registrations.length}</div>
-            <div className="text-slate-500 text-sm">Total Events</div>
+        {/* Navigation & Header Controls */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl font-extrabold text-[#1a1a1a] tracking-tight">
+              Registered Events
+            </h1>
+            <span className="text-sm text-[#a09990] block mt-1">
+              {filteredEvents.length} {filteredEvents.length === 1 ? 'event' : 'events'}
+            </span>
           </div>
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-            <div className="text-2xl font-bold text-emerald-600">
-              {registrations.filter(r => !r.checkInStatus && r.event?.status === 'approved').length}
-            </div>
-            <div className="text-slate-500 text-sm">Upcoming</div>
-          </div>
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-            <div className="text-2xl font-bold text-emerald-600">
-              {registrations.filter(r => r.checkInStatus).length}
-            </div>
-            <div className="text-slate-500 text-sm">Attended</div>
-          </div>
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-            <div className="text-2xl font-bold text-orange-600">
-              {registrations.reduce((sum, r) => sum + (r.ticketsBooked || 1), 0)}
-            </div>
-            <div className="text-slate-500 text-sm">Total Tickets</div>
+
+          <div className="flex gap-2 self-start sm:self-center bg-white/50 p-1.5 rounded-xl border border-[#e4dcd3]">
+            <button
+              onClick={() => setActiveTab("upcoming")}
+              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition ${activeTab === "upcoming"
+                ? "bg-white text-slate-800 shadow-sm"
+                : "text-slate-500 hover:text-slate-800"
+                }`}
+            >
+              Upcoming ({registrations.filter(r => !r.checkInStatus && r.event?.date && new Date(r.event.date) > new Date()).length})
+            </button>
+            <button
+              onClick={() => setActiveTab("past")}
+              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition ${activeTab === "past"
+                ? "bg-white text-slate-800 shadow-sm"
+                : "text-slate-500 hover:text-slate-800"
+                }`}
+            >
+              Past ({registrations.filter(r => r.checkInStatus || (r.event?.date && new Date(r.event.date) <= new Date())).length})
+            </button>
           </div>
         </div>
 
-        {/* Events Grid */}
-        <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
-          <div className="flex items-center gap-3">
-            <TrendingUp className="text-orange-500" size={24} />
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Your Events</h2>
-          </div>
-          <span className="text-sm text-slate-400">{registrations.length} events</span>
-        </div>
-
-        {registrations.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl border border-slate-100 px-4">
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-orange-50 rounded-full mb-4">
-              <Ticket size={40} className="text-orange-400" />
+        {/* Empty State View */}
+        {filteredEvents.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-[#e4dcd3] px-4">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-orange-50 rounded-full mb-4">
+              <Ticket size={36} className="text-orange-400" />
             </div>
-            <h3 className="text-xl font-semibold text-slate-800 mb-2">No Events Yet</h3>
-            <p className="text-slate-500 mb-6">You haven't registered for any events.</p>
-            <button 
+            <h3 className="text-lg font-bold text-slate-800 mb-1">No Events Found</h3>
+            <p className="text-slate-400 text-sm mb-6">You haven't registered for any events in this view.</p>
+            <button
               onClick={() => window.location.href = "/events"}
-              className="px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition shadow-md font-medium"
+              className="px-5 py-2.5 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition text-sm font-medium"
             >
               Browse Events
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-            {registrations.map((registration) => {
+          /* Main Card Container with Horizontal Custom Scrolling styling */
+          <div className="events-scroll-container flex gap-5 overflow-x-auto pb-6 scroll-smooth">
+            {filteredEvents.map((registration) => {
               const event = registration.event;
               if (!event) return null;
-              
+
               const totalPaid = (event.price || 0) * (registration.ticketsBooked || 1);
-              
+
               return (
                 <div
                   key={registration._id}
-                  className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-slate-100"
+                  className="flex-shrink-0 w-[260px] bg-white rounded-2xl overflow-hidden shadow-[0_8px_20px_rgba(0,0,0,0.06)] flex flex-col justify-between"
                 >
-                  {/* Image Section */}
-                  <div className="relative h-44 sm:h-52 overflow-hidden bg-gradient-to-br from-orange-400 to-orange-600">
-                    <img
-                      src={event.image || "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200"}
-                      alt={event.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
-                    
-                    {/* Category Badge */}
-                    <div className="absolute top-4 left-4">
-                      <span className="px-3 py-1 bg-white/95 backdrop-blur-sm rounded-full text-xs font-semibold text-orange-600 shadow-sm">
-                        {event.category || "Event"}
-                      </span>
-                    </div>
-
-                    {/* Check-in Status Badge */}
-                    <div className="absolute top-4 right-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-sm ${registration.checkInStatus ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                        {registration.checkInStatus ? <CheckCircle size={12} /> : <Clock size={12} />}
-                        {registration.checkInStatus ? "Attended" : "Upcoming"}
-                      </span>
-                    </div>
-
-                    {/* Rating placeholder */}
-                    <div className="absolute bottom-4 left-4 flex items-center gap-1 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
-                      <Star size={14} className="text-yellow-400 fill-yellow-400" />
-                      <span className="text-white text-sm font-medium">4.8</span>
-                    </div>
+                  {/* Card Upper Header with Dynamic Gradient */}
+                  <div className={`h-[160px] bg-gradient-to-br ${getCategoryGradient(event.category)} relative flex items-end p-3`}>
+                    <span className="bg-black/45 text-white px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider">
+                      {event.category || "Technology"}
+                    </span>
                   </div>
 
-                  {/* Content */}
-                  <div className="p-4 sm:p-5">
-                    <h3 className="text-lg sm:text-xl font-bold text-slate-800 mb-3 line-clamp-1">
+                  {/* Card Main Dynamic Body Content */}
+                  <div className="p-4 flex flex-col flex-grow">
+                    <h3 className="text-base font-bold text-black mb-3 truncate" title={event.title}>
                       {event.title}
                     </h3>
 
-                    {/* Date and Venue */}
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 text-slate-600 text-sm">
-                        <CalendarDays size={16} className="text-orange-500 shrink-0" />
+                    <div className="mb-4 space-y-1.5 flex-grow">
+                      <div className="flex items-center gap-1.5 text-xs text-[#928b81] font-medium">
+                        <CalendarDays size={13} className="text-[#e59368]" />
                         <span>
-                          {new Date(event.date).toLocaleDateString('en-US', {
-                            month: 'short',
+                          {new Date(event.date).toLocaleDateString('en-GB', {
                             day: 'numeric',
+                            month: 'short',
                             year: 'numeric'
                           })}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-slate-600 text-sm">
-                        <MapPin size={16} className="text-orange-500 shrink-0" />
+
+                      <div className="flex items-center gap-1.5 text-xs text-[#928b81] font-medium truncate" title={event.venue}>
+                        <MapPin size={13} className="text-[#e59368]" />
                         <span className="truncate">{event.venue}</span>
                       </div>
                     </div>
 
-                    {/* Price and Tickets */}
-                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 gap-2 flex-wrap">
-                      <div>
-                        <div className="text-xs text-slate-500">Total Paid</div>
-                        <div className="text-xl font-bold text-orange-600">
-                          ₹{totalPaid}
-                        </div>
-                        <div className="text-xs text-slate-400">
-                          ₹{event.price || 0} × {registration.ticketsBooked || 1} ticket
-                        </div>
-                      </div>
-                      
+                    {/* Embedded Quantity Modifiers & Pricing Layout row */}
+                    <div className="flex items-center justify-between mb-4 bg-slate-50 p-2 rounded-xl border border-slate-100">
                       <div className="flex items-center gap-2">
-                        <div className="bg-orange-50 px-3 py-1.5 rounded-lg">
-                          <div className="flex items-center gap-1">
-                            <Ticket size={14} className="text-orange-600" />
-                            <span className="font-semibold text-slate-800 text-sm">
-                              {registration.ticketsBooked || 1}
-                            </span>
-                          </div>
-                        </div>
-                        
                         <button
-                          onClick={() => handleMoreTickets(registration)}
-                          className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition transform hover:scale-105 shadow-sm shrink-0"
-                          title="Book more tickets"
+                          onClick={() => handleDecreaseTickets(registration)}
+                          className="w-6 h-6 rounded-full border border-slate-200 bg-white text-slate-600 flex items-center justify-center hover:border-orange-500 hover:text-orange-500 transition font-bold disabled:opacity-40"
+                          disabled={registration.ticketsBooked <= 1}
                         >
-                          <Plus size={14} />
+                          -
+                        </button>
+                        <span className="text-sm font-bold text-slate-800 min-w-[12px] text-center">
+                          {registration.ticketsBooked || 1}
+                        </span>
+                        <button
+                          onClick={() => handleIncreaseTickets(registration)}
+                          className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition shadow-sm"
+                        >
+                          <Plus size={12} />
                         </button>
                       </div>
+                      <div className="text-[11px] text-slate-400 font-medium">
+                        Total: <span className="font-bold text-slate-700">₹{totalPaid}</span>
+                      </div>
                     </div>
 
-                    {/* Description Preview */}
-                    <p className="text-slate-500 text-sm mt-3 line-clamp-2">
-                      {event.description || "No description available"}
-                    </p>
-
-                    {/* Action Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-2 mt-4">
-                      <button
-                        onClick={() => handleViewTicket(registration)}
-                        className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2"
-                        disabled={registration.checkInStatus}
-                      >
-                        <QrCode size={16} />
-                        QR Ticket
-                      </button>
-
-                      <button
-                        onClick={() => setSelectedEvent(registration)}
-                        className="flex-1 sm:flex-initial px-4 py-2 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all duration-200 text-sm font-medium flex items-center justify-center gap-2"
-                      >
-                        <Info size={16} />
-                        Details
-                      </button>
-
-                      <button
-                        onClick={() => handleCancel(registration._id, event._id, registration.ticketsBooked)}
-                        className="flex-1 sm:flex-initial px-4 py-2 border border-red-200 text-red-500 rounded-xl hover:bg-red-50 transition-all duration-200 text-sm font-medium flex items-center justify-center gap-2"
-                        disabled={registration.checkInStatus}
-                      >
-                        <Trash2 size={16} />
-                        Cancel
-                      </button>
+                    {/* Card Lower Footer Row */}
+                    <div className="flex items-center justify-between pt-3 border-t border-[#f5f2ee] mt-auto">
+                      <span className="text-base font-bold text-black">
+                        ₹{event.price || 0}
+                      </span>
+                      <span className="text-xs font-bold text-[#913cd3] flex items-center gap-0.5">
+                        <Star size={13} fill="#913cd3" className="text-[#913cd3]" /> 4.8
+                      </span>
                     </div>
+                  </div>
+
+                  {/* Operational Utility Panel overlaying card bottom */}
+                  <div className="grid grid-cols-3 border-t border-slate-100 bg-slate-50 text-xs">
+                    <button
+                      onClick={() => handleViewTicket(registration)}
+                      className="py-2.5 hover:bg-orange-50 text-orange-600 font-semibold flex items-center justify-center gap-1 border-r border-slate-100 transition"
+                      title="View QR Ticket"
+                    >
+                      <QrCode size={13} />
+                      Ticket
+                    </button>
+                    <button
+                      onClick={() => setSelectedEvent(registration)}
+                      className="py-2.5 hover:bg-slate-100 text-slate-600 font-semibold flex items-center justify-center gap-1 border-r border-slate-100 transition"
+                      title="Details"
+                    >
+                      <Info size={13} />
+                      Info
+                    </button>
+                    <button
+                      onClick={() => handleCancel(registration._id, event._id, registration.ticketsBooked)}
+                      className="py-2.5 hover:bg-red-50 text-red-500 font-semibold flex items-center justify-center gap-1 transition disabled:opacity-40 disabled:hover:bg-transparent"
+                      disabled={registration.checkInStatus}
+                      title="Cancel Booking"
+                    >
+                      <Trash2 size={13} />
+                      Drop
+                    </button>
                   </div>
                 </div>
               );
@@ -333,11 +352,11 @@ export default function RegisteredEvents() {
           </div>
         )}
 
-        {/* Event Details Modal - Same as before */}
+        {/* Event Details Modal */}
         {selectedEvent && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-fadeIn">
-            <div className="bg-white rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl max-h-[92vh] overflow-y-auto">
-              <div className="relative h-48 sm:h-64">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+            <div className="bg-white rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto">
+              <div className="relative h-48 sm:h-56">
                 <img
                   src={selectedEvent.event?.image || "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200"}
                   alt={selectedEvent.event?.title}
@@ -352,19 +371,17 @@ export default function RegisteredEvents() {
                 </button>
               </div>
 
-              <div className="p-5 sm:p-6 lg:p-8">
-                <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-800 flex-1">
-                    {selectedEvent.event?.title}
-                  </h2>
-                </div>
+              <div className="p-6">
+                <h2 className="text-2xl font-bold text-slate-800 mb-4">
+                  {selectedEvent.event?.title}
+                </h2>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                   <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <CalendarDays size={18} className="text-orange-500 mt-0.5 shrink-0" />
+                    <div className="flex items-center gap-3">
+                      <CalendarDays size={18} className="text-orange-500" />
                       <div>
-                        <div className="text-sm text-slate-500">Date</div>
+                        <div className="text-xs text-slate-500">Date</div>
                         <div className="font-medium text-slate-800">
                           {new Date(selectedEvent.event?.date).toLocaleDateString('en-US', {
                             weekday: 'long',
@@ -376,36 +393,22 @@ export default function RegisteredEvents() {
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3">
-                      <MapPin size={18} className="text-orange-500 mt-0.5 shrink-0" />
-                      <div className="min-w-0">
-                        <div className="text-sm text-slate-500">Venue</div>
-                        <div className="font-medium text-slate-800 break-words">{selectedEvent.event?.venue}</div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <Ticket size={18} className="text-orange-500 mt-0.5 shrink-0" />
+                    <div className="flex items-center gap-3">
+                      <MapPin size={18} className="text-orange-500" />
                       <div>
-                        <div className="text-sm text-slate-500">Tickets</div>
-                        <div className="font-medium text-slate-800">{selectedEvent.ticketsBooked || 1} tickets</div>
+                        <div className="text-xs text-slate-500">Venue</div>
+                        <div className="font-medium text-slate-800">{selectedEvent.event?.venue}</div>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <div>
-                      <div className="text-sm text-slate-500">Category</div>
-                      <div className="font-medium text-slate-800">{selectedEvent.event?.category || "General"}</div>
+                      <div className="text-xs text-slate-500">Tickets Booked</div>
+                      <div className="font-medium text-slate-800">{selectedEvent.ticketsBooked || 1}</div>
                     </div>
-
                     <div>
-                      <div className="text-sm text-slate-500">Price per ticket</div>
-                      <div className="font-medium text-slate-800">₹{selectedEvent.event?.price || 0}</div>
-                    </div>
-
-                    <div>
-                      <div className="text-sm text-slate-500">Total Paid</div>
+                      <div className="text-xs text-slate-500">Total Amount</div>
                       <div className="font-bold text-orange-600 text-xl">
                         ₹{(selectedEvent.event?.price || 0) * (selectedEvent.ticketsBooked || 1)}
                       </div>
@@ -413,24 +416,26 @@ export default function RegisteredEvents() {
                   </div>
                 </div>
 
-                <div className="mt-6 pt-6 border-t border-slate-100">
+                <div className="pt-4 border-t border-slate-100">
                   <h3 className="font-semibold text-slate-800 mb-2">About this event</h3>
                   <p className="text-slate-600 leading-relaxed">
                     {selectedEvent.event?.description || "No description available"}
                   </p>
                 </div>
 
-                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                <div className="mt-6 flex gap-3">
                   <button
-                    onClick={() => setShowQRModal(selectedEvent)}
-                    className="flex-1 px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-all shadow-md flex items-center justify-center gap-2 font-medium"
+                    onClick={() => {
+                      setShowTicketModal(selectedEvent);
+                      setSelectedEvent(null);
+                    }}
+                    className="flex-1 px-6 py-3 bg-orange-50 text-orange-600 border border-orange-200 rounded-xl hover:bg-orange-100 transition-all font-semibold text-sm"
                   >
-                    <QrCode size={18} />
                     View QR Ticket
                   </button>
                   <button
                     onClick={() => setSelectedEvent(null)}
-                    className="px-6 py-3 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all font-medium"
+                    className="px-6 py-3 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all font-medium text-sm"
                   >
                     Close
                   </button>
@@ -440,74 +445,166 @@ export default function RegisteredEvents() {
           </div>
         )}
 
-        {/* QR Code Modal */}
-        {showQRModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-3 sm:p-4 animate-fadeIn">
-            <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-8 text-center shadow-2xl max-h-[92vh] overflow-y-auto">
-              <div className="mb-4">
-                <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <QrCode size={40} className="text-orange-600" />
-                </div>
-                <h3 className="text-2xl font-bold text-slate-800">Your Ticket</h3>
-                <p className="text-slate-500 text-sm mt-1">{showQRModal.event?.title}</p>
+        {/* Ticket Modal - Same as Tickets.jsx */}
+        {showTicketModal && (
+          <div
+            className="fixed inset-0 z-50 grid place-items-center p-3 sm:p-6 bg-stone-900/50 backdrop-blur-sm"
+            onClick={() => setShowTicketModal(null)}
+          >
+            <div
+              className="relative w-full max-w-md rounded-2xl bg-[#fffaf5] border border-white/30 shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setShowTicketModal(null)}
+                aria-label="Close"
+                className="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/90 shadow-md border-0 cursor-pointer hover:bg-white transition-colors"
+              >
+                <X size={16} className="text-stone-700" />
+              </button>
+
+              <div className={`h-24 w-full flex items-end p-4 relative bg-gradient-to-br from-purple-600/80 to-orange-400/75`}>
+                <div className="absolute inset-0 bg-gradient-to-t from-stone-900/50 to-transparent" />
+                <span className="relative z-10 text-xs font-bold text-white bg-stone-900/40 px-2.5 py-1 rounded-full">
+                  {showTicketModal.event?.category || "Event"}
+                </span>
               </div>
 
-              {/* Simulated QR Code */}
-              <div className="bg-slate-800 p-4 sm:p-6 rounded-2xl mb-6 inline-block mx-auto">
-                <div className="w-40 h-40 sm:w-48 sm:h-48 bg-white rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <Ticket size={60} className="text-slate-800 mx-auto mb-2" />
-                    <div className="text-xs text-slate-600 font-mono break-all px-2">QR-{showQRModal._id}</div>
-                    <div className="text-xs text-slate-500 mt-1">Ticket #{Math.random().toString(36).substr(2, 8).toUpperCase()}</div>
+              <div className="p-4 sm:p-6">
+                <h2 className="m-0 mb-1 text-stone-900 text-xl font-black">{showTicketModal.event?.title}</h2>
+                <p className="m-0 mb-5 text-stone-400 text-xs">
+                  Official entry pass · Valid for {showTicketModal.ticketsBooked} person{showTicketModal.ticketsBooked !== 1 ? "s" : ""}
+                </p>
+
+                <div className="flex flex-col gap-3 mb-5">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-orange-50/60">
+                    <CalendarDays size={16} className="text-orange-500 mt-0.5" />
+                    <div className="min-w-0">
+                      <strong className="block text-xs font-bold text-stone-500 uppercase tracking-wide">Date & Time</strong>
+                      <span className="text-sm text-stone-700 font-semibold break-words">
+                        {showTicketModal.event?.date ? new Date(showTicketModal.event.date).toDateString() : "—"} at {showTicketModal.event?.time || "—"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-orange-50/60">
+                    <MapPin size={16} className="text-orange-500 mt-0.5" />
+                    <div className="min-w-0">
+                      <strong className="block text-xs font-bold text-stone-500 uppercase tracking-wide">Venue</strong>
+                      <span className="text-sm text-stone-700 font-semibold break-words">{showTicketModal.event?.venue || "—"}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-orange-50/60">
+                    <Ticket size={16} className="text-orange-500 mt-0.5" />
+                    <div className="min-w-0">
+                      <strong className="block text-xs font-bold text-stone-500 uppercase tracking-wide">Ticket Price</strong>
+                      <span className="text-sm text-stone-700 font-semibold break-words">
+                        ₹{showTicketModal.event?.price ?? 0}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-2 text-left bg-slate-50 p-4 rounded-xl mb-6">
-                <div className="flex justify-between text-sm gap-2">
-                  <span className="text-slate-600">Ticket Holder:</span>
-                  <span className="font-medium text-slate-800 text-right truncate">{showQRModal.attendeeName}</span>
+                <div className="flex flex-col items-center gap-3 py-4 border-t border-dashed border-stone-200">
+                  <div className="p-3 rounded-xl bg-white shadow-sm">
+                    <div className="w-[120px] h-[120px] bg-orange-100 rounded-lg flex items-center justify-center">
+                      <QRCode
+                        value={JSON.stringify({
+                          registrationId: showTicketModal._id,
+                          eventId: showTicketModal.event?._id,
+                        })}
+                        size={120}
+                        bgColor="#FFFFFF"
+                        fgColor="#f97316"
+                      />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <p className="m-0 text-xs text-stone-400 font-bold uppercase tracking-wide mb-1">Booking ID</p>
+                    <code className="text-sm font-mono font-bold text-stone-700 bg-stone-100 px-3 py-1 rounded-lg break-all">
+                      {showTicketModal._id}
+                    </code>
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm gap-2">
-                  <span className="text-slate-600">Email:</span>
-                  <span className="font-medium text-slate-800 text-right truncate">{showQRModal.attendeeEmail}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Tickets:</span>
-                  <span className="font-medium text-slate-800">{showQRModal.ticketsBooked || 1}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Status:</span>
-                  <span className={`font-medium ${showQRModal.checkInStatus ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {showQRModal.checkInStatus ? "Attended" : "Not Checked In"}
-                  </span>
-                </div>
-              </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
                 <button
-                  onClick={() => setShowQRModal(null)}
-                  className="flex-1 px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-all font-medium"
+                  type="button"
+                  onClick={() => setShowTicketModal(null)}
+                  className="mt-4 w-full h-10 rounded-xl text-sm font-bold text-white border-0 cursor-pointer transition-opacity hover:opacity-90"
+                  style={{ background: "linear-gradient(135deg,#f97316,#ea580c)" }}
                 >
                   Close
-                </button>
-                <button
-                  onClick={() => {
-                    // Implement PDF download logic here
-                    alert("Download feature coming soon!");
-                    setShowQRModal(null);
-                  }}
-                  className="flex-1 px-6 py-3 border border-orange-300 text-orange-600 rounded-xl hover:bg-orange-50 transition-all font-medium"
-                >
-                  Download
                 </button>
               </div>
             </div>
           </div>
         )}
+
+
+        {/* QR Code Modal */}
+        {/* {showQRModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fadeIn">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 text-center shadow-2xl">
+              <div className="mb-4">
+                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <QrCode size={32} className="text-orange-600" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-800">Your Ticket</h3>
+                <p className="text-slate-500 text-sm mt-1">{showQRModal.event?.title}</p>
+              </div>
+
+              <div className="bg-slate-800 p-4 rounded-2xl mb-6 inline-block mx-auto">
+                <div className="w-40 h-40 bg-white rounded-lg flex items-center justify-center">
+                  <div className="text-center">
+                    <Ticket size={50} className="text-slate-800 mx-auto mb-2" />
+                    <div className="text-xs text-slate-600 font-mono">{showQRModal._id?.slice(-8)}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 text-left bg-slate-50 p-4 rounded-xl mb-6">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Ticket Holder:</span>
+                  <span className="font-medium text-slate-800">{showQRModal.attendeeName || "Guest"}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Email:</span>
+                  <span className="font-medium text-slate-800">{showQRModal.attendeeEmail || "guest@example.com"}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Tickets:</span>
+                  <span className="font-medium text-slate-800">{showQRModal.ticketsBooked || 1}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowQRModal(null)}
+                  className="flex-1 px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-all font-medium text-sm"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )} */}
       </div>
 
-      <style jsx>{`
+      {/* Styled JSX scoped block for Custom Scrollbar matching layout mock */}
+      <style>{`
+        .events-scroll-container::-webkit-scrollbar {
+          height: 6px;
+        }
+        .events-scroll-container::-webkit-scrollbar-track {
+          background: #e4dcd3;
+          border-radius: 10px;
+        }
+        .events-scroll-container::-webkit-scrollbar-thumb {
+          background: #e2a283;
+          border-radius: 10px;
+        }
         @keyframes fadeIn {
           from {
             opacity: 0;
