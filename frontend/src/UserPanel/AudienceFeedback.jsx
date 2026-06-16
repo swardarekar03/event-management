@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Star, Send, Edit2, Trash2, Calendar, MapPin, MessageCircle } from "lucide-react";
-
-const PORT = 5000;
+import { API_BASE_URL } from "../config/api.js";
 
 export default function AudienceFeedback() {
   const [registeredEvents, setRegisteredEvents] = useState([]);
@@ -26,12 +25,12 @@ export default function AudienceFeedback() {
       const token = localStorage.getItem("token");
       
       // Get user's registered events
-      const registrationsRes = await axios.get(`https://event-management-ak5b.onrender.com/api/registrations/`, {
+      const registrationsRes = await axios.get(`${API_BASE_URL}/registrations/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       // Get user's existing feedbacks
-      const feedbacksRes = await axios.get(`https://event-management-ak5b.onrender.com/api/feedback/my-feedbacks`, {
+      const feedbacksRes = await axios.get(`${API_BASE_URL}/feedback/my-feedbacks`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -76,8 +75,8 @@ export default function AudienceFeedback() {
     try {
       const token = localStorage.getItem("token");
       const url = editingFeedback 
-        ? `https://event-management-ak5b.onrender.com/api/feedback/${editingFeedback._id}`
-        : `https://event-management-ak5b.onrender.com/api/feedback/create`;
+        ? `${API_BASE_URL}/feedback/${editingFeedback._id}`
+        : `${API_BASE_URL}/feedback/create`;
       
       const method = editingFeedback ? "put" : "post";
       
@@ -112,7 +111,7 @@ export default function AudienceFeedback() {
     
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`https://event-management-ak5b.onrender.com/api/feedback/${id}`, {
+      await axios.delete(`${API_BASE_URL}/feedback/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert("Feedback deleted");

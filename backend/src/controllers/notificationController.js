@@ -2,8 +2,6 @@ import Notification from "../models/notifications.js";
 import Registration from "../models/Registeration.js";
 import Event from "../models/Event.js";
 
-// controllers/notificationController.js
-
 // Organizer: Send notification to all registered attendees of an event
 export const sendNotificationToEventAttendees = async (req, res) => {
   try {

@@ -2,6 +2,7 @@ import { CalendarDays, Clock, MapPin, Ticket, X, Eye, ArrowLeft } from "lucide-r
 import { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import QRCode from "react-qr-code";
+import { API_BASE_URL } from "../config/api.js";
 
 const TABS = ["Upcoming", "Past"];
 
@@ -40,7 +41,7 @@ export default function Tickets() {
         // If there's an ID in the URL, fetch ONLY that specific ticket
         if (id) {
           setIsSingleTicketView(true);
-          const res = await fetch(`https://event-management-ak5b.onrender.com/api/registrations/${id}`, {
+          const res = await fetch(`${API_BASE_URL}/registrations/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await res.json();
@@ -63,7 +64,7 @@ export default function Tickets() {
           }
         } else {
           setIsSingleTicketView(false);
-          const res = await fetch("https://event-management-ak5b.onrender.com/api/registrations", {
+          const res = await fetch(`${API_BASE_URL}/registrations`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await res.json();

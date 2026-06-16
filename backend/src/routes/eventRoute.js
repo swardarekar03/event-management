@@ -11,7 +11,7 @@ import {
 
 const router = express.Router();
 
-router.get("/", getEvents);                              // ← changed from "/get-events"
+router.get("/", getEvents);                  
 router.post("/create-event", protect, createEvent);
 router.get("/get-event/:id", protect, singleEvent);
 router.put("/update-event/:id", protect, updateEvent);

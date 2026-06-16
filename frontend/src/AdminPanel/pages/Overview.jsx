@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { CalendarDays, Users, Ticket, Building2, TrendingUp, ArrowUpRight } from "lucide-react";
+import { API_BASE_URL } from "../../config/api.js";
 
 const statCards = [
     { label: "Total Events", key: "events", icon: CalendarDays, color: "bg-orange-50 text-orange-500", border: "border-orange-100" },
@@ -17,25 +18,25 @@ export default function Overview() {
         const headers = { Authorization: `Bearer ${token}` };
 
         // Fetch events count
-        fetch("https://event-management-ak5b.onrender.com/api/admin/events", { headers })
+        fetch(`${API_BASE_URL}/admin/events`, { headers })
             .then(r => r.json())
             .then(d => setStats(prev => ({ ...prev, events: d.events?.length || 0 })))
             .catch(() => {});
 
         // Fetch users count
-        fetch("https://event-management-ak5b.onrender.com/api/admin/users", { headers })
+        fetch(`${API_BASE_URL}/admin/users`, { headers })
             .then(r => r.json())
             .then(d => setStats(prev => ({ ...prev, users: d.users?.length || 0 })))
             .catch(() => {});
 
         // Fetch tickets count
-        fetch("https://event-management-ak5b.onrender.com/api/admin/tickets", { headers })
+        fetch(`${API_BASE_URL}/admin/tickets`, { headers })
             .then(r => r.json())
             .then(d => setStats(prev => ({ ...prev, tickets: d.tickets?.length || 0 })))
             .catch(() => {});
 
         // Fetch recent events
-        fetch("https://event-management-ak5b.onrender.com/api/events", { headers })
+        fetch(`${API_BASE_URL}/events`, { headers })
             .then(r => r.json())
             .then(d => setRecentEvents((d.events || []).slice(0, 5)))
             .catch(() => {});

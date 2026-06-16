@@ -23,8 +23,7 @@ import {
   Images,
   TrendingUp
 } from "lucide-react";
-
-const PORT = 5000;
+import { API_BASE_URL } from "../config/api.js";
 
 const sidebarItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -140,7 +139,7 @@ function Dashboard({ events = [] }) {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`https://event-management-ak5b.onrender.com/api/organizer/dashboard-stats`, {
+      const res = await axios.get(`${API_BASE_URL}/organizer/dashboard-stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
@@ -250,7 +249,7 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.post(`https://event-management-ak5b.onrender.com/api/events/create-event`, {
+      const res = await axios.post(`${API_BASE_URL}/events/create-event`, {
         title: form.title,
         category: form.category,
         date: form.date,
@@ -274,7 +273,7 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.put(`https://event-management-ak5b.onrender.com/api/events/update-event/${editingEvent._id}`, {
+      const res = await axios.put(`${API_BASE_URL}/events/update-event/${editingEvent._id}`, {
         title: form.title,
         category: form.category,
         date: form.date,
@@ -307,7 +306,7 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
     if (!window.confirm("Delete this event?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`https://event-management-ak5b.onrender.com/api/events/delete-event/${id}`, {
+      await axios.delete(`${API_BASE_URL}/events/delete-event/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       await fetchEvents();
@@ -409,7 +408,7 @@ function Registrations() {
         return;
       }
 
-      const res = await axios.get(`https://event-management-ak5b.onrender.com/api/registrations/organizer`, {
+      const res = await axios.get(`${API_BASE_URL}/registrations/organizer`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -437,7 +436,7 @@ function Registrations() {
   const handleCheckIn = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.put(`https://event-management-ak5b.onrender.com/api/registrations/checkin/${id}`, {}, {
+      const res = await axios.put(`${API_BASE_URL}/registrations/checkin/${id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
@@ -560,7 +559,7 @@ function QRCheckin() {
   const fetchRecentCheckins = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`https://event-management-ak5b.onrender.com/api/registrations/organizer`, {
+      const res = await axios.get(`${API_BASE_URL}/registrations/organizer`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success && Array.isArray(res.data.registrations)) {
@@ -614,7 +613,7 @@ function QRCheckin() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
-        `https://event-management-ak5b.onrender.com/api/registrations/checkin/${id.trim()}`,
+        `${API_BASE_URL}/registrations/checkin/${id.trim()}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -740,7 +739,7 @@ function Notifications({ events = [] }) {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `https://event-management-ak5b.onrender.com/api/notifications/organizer/event/${eventId}`,
+        `${API_BASE_URL}/notifications/organizer/event/${eventId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.success) {
@@ -768,7 +767,7 @@ function Notifications({ events = [] }) {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        `https://event-management-ak5b.onrender.com/api/notifications/send-to-event/${selectedEventId}`,
+        `${API_BASE_URL}/notifications/send-to-event/${selectedEventId}`,
         { title, message: msg, type },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -1011,8 +1010,6 @@ function Feedback() {
   const [loading, setLoading] = useState(true);
   const [selectedEventFilter, setSelectedEventFilter] = useState("");
   const [ratingFilter, setRatingFilter] = useState("");
-  const [selectedFeedback, setSelectedFeedback] = useState(null);
-  const [responseText, setResponseText] = useState("");
   const [events, setEvents] = useState([]);
 
   const fetchFeedbacks = async () => {
@@ -1051,36 +1048,6 @@ function Feedback() {
     fetchEvents();
   }, [selectedEventFilter, ratingFilter]);
 
-  const handleRespond = async (feedbackId) => {
-    if (!responseText.trim()) { alert("Please enter a response"); return; }
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `https://event-management-ak5b.onrender.com/api/feedback/organizer/respond/${feedbackId}`,
-        { response: responseText },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert("Response added!");
-      setSelectedFeedback(null);
-      setResponseText("");
-      fetchFeedbacks();
-    } catch (err) { alert("Failed to add response"); }
-  };
-
-  const handleTogglePublish = async (feedbackId, currentStatus) => {
-    try {
-      const token = localStorage.getItem("token");
-      const endpoint = currentStatus ? "hide" : "publish";
-      await axios.put(
-        `https://event-management-ak5b.onrender.com/api/feedback/organizer/${endpoint}/${feedbackId}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert(currentStatus ? "Feedback hidden" : "Feedback published");
-      fetchFeedbacks();
-    } catch (err) { alert("Failed to update status"); }
-  };
-
   const StarDisplay = ({ rating }) => (
     <div className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map((star) => (
@@ -1103,14 +1070,6 @@ function Feedback() {
           <div className="bg-white rounded-xl p-4 border border-orange-100">
             <div className="text-2xl font-bold text-emerald-600">{stats.averageRating}</div>
             <div className="text-xs text-gray-400">Average Rating</div>
-          </div>
-          <div className="bg-white rounded-xl p-4 border border-orange-100">
-            <div className="text-2xl font-bold text-blue-600">{stats.responded}</div>
-            <div className="text-xs text-gray-400">Responded</div>
-          </div>
-          <div className="bg-white rounded-xl p-4 border border-orange-100">
-            <div className="text-2xl font-bold text-amber-600">{stats.notResponded}</div>
-            <div className="text-xs text-gray-400">Pending Response</div>
           </div>
         </div>
       )}
@@ -1147,56 +1106,13 @@ function Feedback() {
                     <span className="font-semibold text-gray-800">{fb.audienceName}</span>
                     <StarDisplay rating={fb.rating} />
                     <span className="text-[11px] text-gray-400">{new Date(fb.createdAt).toLocaleDateString()}</span>
-                    {!fb.isPublished && <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded">Hidden</span>}
                   </div>
                   <p className="text-[13px] text-gray-600 mb-2">{fb.comment}</p>
                   <p className="text-[11px] text-gray-400">Event: {fb.eventTitle}</p>
-                  {fb.organizerResponded && (
-                    <div className="mt-3 bg-orange-50 rounded-lg p-3">
-                      <p className="text-[11px] font-semibold text-orange-600 mb-1">Your Response:</p>
-                      <p className="text-[13px] text-gray-700">{fb.organizerResponse}</p>
-                    </div>
-                  )}
-                </div>
-                <div className="flex gap-2 sm:ml-4 flex-wrap">
-                  <button onClick={() => { setSelectedFeedback(fb); setResponseText(fb.organizerResponse || ""); }}
-                    className="px-3 py-1.5 text-[11px] bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 whitespace-nowrap">
-                    {fb.organizerResponded ? "Edit Response" : "Respond"}
-                  </button>
-                  <button onClick={() => handleTogglePublish(fb._id, fb.isPublished)}
-                    className={`px-3 py-1.5 text-[11px] rounded-lg whitespace-nowrap ${fb.isPublished ? "bg-gray-100 text-gray-600 hover:bg-gray-200" : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"}`}>
-                    {fb.isPublished ? "Hide" : "Publish"}
-                  </button>
                 </div>
               </div>
             </Card>
           ))}
-        </div>
-      )}
-
-      {selectedFeedback && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Respond to {selectedFeedback.audienceName}</h3>
-            <div className="mb-4 p-3 bg-orange-50 rounded-lg">
-              <p className="text-[11px] text-gray-500 mb-1">Original Feedback:</p>
-              <p className="text-sm text-gray-700">{selectedFeedback.comment}</p>
-              <div className="flex gap-1 mt-2">
-                {[1, 2, 3, 4, 5].map(star => (
-                  <Star key={star} size={14} className={star <= selectedFeedback.rating ? "fill-orange-500" : "text-gray-300"} />
-                ))}
-              </div>
-            </div>
-            <textarea rows={4} value={responseText} onChange={(e) => setResponseText(e.target.value)}
-              className="w-full border border-orange-100 rounded-xl px-3 py-2 text-[13px] resize-none focus:outline-none focus:border-orange-300"
-              placeholder="Write your response here..." />
-            <div className="flex flex-col sm:flex-row gap-3 mt-4">
-              <button onClick={() => handleRespond(selectedFeedback._id)}
-                className="flex-1 bg-orange-500 text-white py-2 rounded-xl hover:bg-orange-600">Send Response</button>
-              <button onClick={() => setSelectedFeedback(null)}
-                className="flex-1 border border-slate-200 py-2 rounded-xl hover:bg-slate-50">Cancel</button>
-            </div>
-          </div>
         </div>
       )}
     </div>

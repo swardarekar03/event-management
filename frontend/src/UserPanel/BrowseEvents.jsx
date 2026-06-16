@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config/api.js";
 
 const categoryColors = {
   Technology: "bg-gradient-to-br from-purple-600/80 to-orange-400/75",
@@ -85,7 +86,7 @@ export default function BrowseEvents({ filterType = "browse" }) {
   useEffect(() => {
     const token = localStorage.getItem("token");
     setLoading(true);
-    fetch("https://event-management-ak5b.onrender.com/api/events", {
+    fetch(`${API_BASE_URL}/events`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -130,7 +131,7 @@ export default function BrowseEvents({ filterType = "browse" }) {
     if (!token) { navigate("/login"); return; }
     setBooking(true);
     try {
-      const res  = await fetch("https://event-management-ak5b.onrender.com/api/registrations/register", {
+      const res  = await fetch(`${API_BASE_URL}/registrations/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ eventId: selectedEvent._id, quantity: 1 }),
