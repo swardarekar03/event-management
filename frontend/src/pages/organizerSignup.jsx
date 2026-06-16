@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config/api.js";
 
 export default function OrganizerSignup() {
   const navigate = useNavigate();
@@ -81,7 +82,7 @@ export default function OrganizerSignup() {
 
     setLoading(true);
     try {
-      const response = await fetch("https://event-management-ak5b.onrender.com/api/organizers/signup", {
+      const response = await fetch(`${API_BASE_URL}/organizer/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -110,12 +111,13 @@ export default function OrganizerSignup() {
 
       // Save credentials in local storage
       localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.organizer));
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("role", "organizer");
 
       setLoading(false);
       setSuccess(true);
       setTimeout(() => {
-        navigate("/login");
+        navigate("/organizerpanel");
       }, 2500);
     } catch (err) {
       setLoading(false);
@@ -427,7 +429,7 @@ export default function OrganizerSignup() {
           {success && (
             <div style={{ padding: "16px", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: "12px", color: "#16a34a", fontSize: "14px", marginBottom: "20px", textAlign: "center" }}>
               <h4 style={{ margin: "0 0 4px 0", fontWeight: 700 }}>Registration Successful!</h4>
-              <p style={{ margin: 0, fontSize: "13px", color: "#16a34a" }}>Your organizer account has been created. Redirecting to Login...</p>
+              <p style={{ margin: 0, fontSize: "13px", color: "#16a34a" }}>Your organizer account has been created. Redirecting to Dashboard...</p>
             </div>
           )}
 
@@ -779,7 +781,6 @@ export default function OrganizerSignup() {
                 ) : (
                   <button
                     type="submit"
-                    onClick={() => navigate("/organizerpanel")}
                     disabled={loading}
                     onMouseEnter={() => setBtnHover(true)}
                     onMouseLeave={() => setBtnHover(false)}

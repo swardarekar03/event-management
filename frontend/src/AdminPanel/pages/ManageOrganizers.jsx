@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Search, CheckCircle, XCircle, Clock } from "lucide-react";
+import { API_BASE_URL } from "../../config/api.js";
 
 export default function ManageOrganizers() {
     const [organizers, setOrganizers] = useState([]);
@@ -9,7 +10,7 @@ export default function ManageOrganizers() {
 
     useEffect(() => {
         const token = localStorage.getItem("token");
-        fetch("https://event-management-ak5b.onrender.com/api/admin/organizers", {
+        fetch(`${API_BASE_URL}/admin/organizers`, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((r) => r.json())
@@ -21,7 +22,7 @@ export default function ManageOrganizers() {
     const handleAction = async (id, action) => {
         const token = localStorage.getItem("token");
         try {
-            await fetch(`https://event-management-ak5b.onrender.com/api/admin/organizers/${id}/${action}`, {
+            await fetch(`${API_BASE_URL}/admin/organizers/${id}/${action}`, {
                 method: "PATCH",
                 headers: { Authorization: `Bearer ${token}` },
             });

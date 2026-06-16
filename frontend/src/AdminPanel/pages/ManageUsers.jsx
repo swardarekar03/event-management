@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Search, UserX, ShieldCheck } from "lucide-react";
+import { API_BASE_URL } from "../../config/api.js";
 
 export default function ManageUsers() {
     const [users, setUsers] = useState([]);
@@ -8,7 +9,7 @@ export default function ManageUsers() {
 
     useEffect(() => {
         const token = localStorage.getItem("token");
-        fetch("https://event-management-ak5b.onrender.com/api/admin/users", {
+        fetch(`${API_BASE_URL}/admin/users`, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((r) => r.json())
@@ -20,7 +21,7 @@ export default function ManageUsers() {
     const handleBan = async (id) => {
         const token = localStorage.getItem("token");
         try {
-            await fetch(`https://event-management-ak5b.onrender.com/api/admin/users/${id}/ban`, {
+            await fetch(`${API_BASE_URL}/admin/users/${id}/ban`, {
                 method: "PATCH",
                 headers: { Authorization: `Bearer ${token}` },
             });
