@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config/api.js";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      const response = await fetch("https://event-management-ak5b.onrender.com/api/auth/signup", {
+      const response = await fetch(`${API_BASE_URL}/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

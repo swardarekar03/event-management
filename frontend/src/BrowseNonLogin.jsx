@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "./config/api.js";
 
 const categoryClass = {
   Technology: "bg-gradient-to-br from-purple-600/80 to-orange-400/75",
@@ -102,7 +103,7 @@ export default function BrowseNonLogin({ onBackHome }) {
     (async () => {
       try {
         setLoading(true);
-        const res  = await fetch("https://event-management-ak5b.onrender.com/api/events");
+        const res  = await fetch(`${API_BASE_URL}/events`);
         const data = await res.json();
         if (data.success && Array.isArray(data.events)) setEvents(data.events);
         else setError("Failed to load events");

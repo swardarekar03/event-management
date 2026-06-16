@@ -23,8 +23,7 @@ import {
   Images,
   TrendingUp
 } from "lucide-react";
-
-const PORT = 5000;
+import { API_BASE_URL } from "../config/api.js";
 
 const sidebarItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -140,7 +139,7 @@ function Dashboard({ events = [] }) {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`https://event-management-ak5b.onrender.com/api/organizer/dashboard-stats`, {
+      const res = await axios.get(`${API_BASE_URL}/organizer/dashboard-stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
@@ -250,7 +249,7 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.post(`https://event-management-ak5b.onrender.com/api/events/create-event`, {
+      const res = await axios.post(`${API_BASE_URL}/events/create-event`, {
         title: form.title,
         category: form.category,
         date: form.date,
@@ -274,7 +273,7 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.put(`https://event-management-ak5b.onrender.com/api/events/update-event/${editingEvent._id}`, {
+      const res = await axios.put(`${API_BASE_URL}/events/update-event/${editingEvent._id}`, {
         title: form.title,
         category: form.category,
         date: form.date,
@@ -307,7 +306,7 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
     if (!window.confirm("Delete this event?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`https://event-management-ak5b.onrender.com/api/events/delete-event/${id}`, {
+      await axios.delete(`${API_BASE_URL}/events/delete-event/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       await fetchEvents();
@@ -409,7 +408,7 @@ function Registrations() {
         return;
       }
 
-      const res = await axios.get(`https://event-management-ak5b.onrender.com/api/registrations/organizer`, {
+      const res = await axios.get(`${API_BASE_URL}/registrations/organizer`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -437,7 +436,7 @@ function Registrations() {
   const handleCheckIn = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.put(`https://event-management-ak5b.onrender.com/api/registrations/checkin/${id}`, {}, {
+      const res = await axios.put(`${API_BASE_URL}/registrations/checkin/${id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
@@ -560,7 +559,7 @@ function QRCheckin() {
   const fetchRecentCheckins = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`https://event-management-ak5b.onrender.com/api/registrations/organizer`, {
+      const res = await axios.get(`${API_BASE_URL}/registrations/organizer`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success && Array.isArray(res.data.registrations)) {
@@ -614,7 +613,7 @@ function QRCheckin() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
-        `https://event-management-ak5b.onrender.com/api/registrations/checkin/${id.trim()}`,
+        `${API_BASE_URL}/registrations/checkin/${id.trim()}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -740,7 +739,7 @@ function Notifications({ events = [] }) {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `https://event-management-ak5b.onrender.com/api/notifications/organizer/event/${eventId}`,
+        `${API_BASE_URL}/notifications/organizer/event/${eventId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.success) {
@@ -768,7 +767,7 @@ function Notifications({ events = [] }) {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        `https://event-management-ak5b.onrender.com/api/notifications/send-to-event/${selectedEventId}`,
+        `${API_BASE_URL}/notifications/send-to-event/${selectedEventId}`,
         { title, message: msg, type },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Bell, Mail, CalendarDays, MapPin, CheckCircle, Clock, Trash2, Eye } from "lucide-react";
-
-const PORT = 5000;
+import { API_BASE_URL } from "../config/api.js";
 
 export default function AudienceNotifications() {
   const [notifications, setNotifications] = useState([]);
@@ -14,7 +13,7 @@ export default function AudienceNotifications() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `https://event-management-ak5b.onrender.com/api/notifications/my-notifications?unreadOnly=${filter === "unread"}`,
+        `${API_BASE_URL}/notifications/my-notifications?unreadOnly=${filter === "unread"}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.success) {
@@ -31,7 +30,7 @@ export default function AudienceNotifications() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `https://event-management-ak5b.onrender.com/api/notifications/my-unread-count`,
+        `${API_BASE_URL}/notifications/my-unread-count`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.success) {
@@ -51,7 +50,7 @@ export default function AudienceNotifications() {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `https://event-management-ak5b.onrender.com/api/notifications/mark-read/${id}`,
+        `${API_BASE_URL}/notifications/mark-read/${id}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -66,7 +65,7 @@ export default function AudienceNotifications() {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `https://event-management-ak5b.onrender.com/api/notifications/mark-all-read`,
+        `${API_BASE_URL}/notifications/mark-all-read`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -82,7 +81,7 @@ export default function AudienceNotifications() {
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
-        `https://event-management-ak5b.onrender.com/api/notifications/${id}`,
+        `${API_BASE_URL}/notifications/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchNotifications();

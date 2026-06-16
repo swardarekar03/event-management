@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Trash2, Search, CalendarDays, MapPin, CheckCircle, XCircle, Clock } from "lucide-react";
+import { API_BASE_URL } from "../../config/api.js";
 
 const categoryColors = {
     Concerts: "bg-pink-100 text-pink-600",
@@ -21,7 +22,7 @@ export default function ManageEvents() {
 
     const fetchEvents = () => {
         const token = localStorage.getItem("token");
-        fetch("https://event-management-ak5b.onrender.com/api/admin/events", {  // ← changed from /api/events
+        fetch(`${API_BASE_URL}/admin/events`, {  // ← using central API config
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((r) => r.json())
@@ -35,7 +36,7 @@ export default function ManageEvents() {
     const handleDelete = async (id) => {
         const token = localStorage.getItem("token");
         try {
-            await fetch(`https://event-management-ak5b.onrender.com/api/admin/events/${id}`, {
+            await fetch(`${API_BASE_URL}/admin/events/${id}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -50,7 +51,7 @@ export default function ManageEvents() {
     const handleAction = async (id, action) => {
         const token = localStorage.getItem("token");
         try {
-            await fetch(`https://event-management-ak5b.onrender.com/api/admin/events/${id}/${action}`, {
+            await fetch(`${API_BASE_URL}/admin/events/${id}/${action}`, {
                 method: "PATCH",
                 headers: { Authorization: `Bearer ${token}` },
             });

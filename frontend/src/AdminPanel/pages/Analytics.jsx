@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { BarChart3, TrendingUp, Users, Ticket, CalendarDays } from "lucide-react";
+import { API_BASE_URL } from "../../config/api.js";
 
 export default function Analytics() {
     // Store analytics data
@@ -20,9 +21,9 @@ export default function Analytics() {
 
         // Fetch events, users, and tickets simultaneously
         Promise.all([
-            fetch("https://event-management-ak5b.onrender.com/api/events", { headers }).then(r => r.json()),
-            fetch("https://event-management-ak5b.onrender.com/api/admin/users", { headers }).then(r => r.json()),
-            fetch("https://event-management-ak5b.onrender.com/api/admin/tickets", { headers }).then(r => r.json()),
+            fetch(`${API_BASE_URL}/events`, { headers }).then(r => r.json()),
+            fetch(`${API_BASE_URL}/admin/users`, { headers }).then(r => r.json()),
+            fetch(`${API_BASE_URL}/admin/tickets`, { headers }).then(r => r.json()),
         ])
             .then(([eventsData, usersData, ticketsData]) => {
                 const events = eventsData.events || [];

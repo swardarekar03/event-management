@@ -18,8 +18,7 @@ import {
   TrendingUp,
   Sparkles,
 } from "lucide-react";
-
-const PORT = 5000;
+import { API_BASE_URL } from "../config/api.js";
 
 export default function RegisteredEvents() {
 
@@ -48,7 +47,7 @@ export default function RegisteredEvents() {
         return;
       }
 
-      const res = await axios.get(`https://event-management-ak5b.onrender.com/api/registrations/`, {
+      const res = await axios.get(`${API_BASE_URL}/registrations/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -76,7 +75,7 @@ export default function RegisteredEvents() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
-        `https://event-management-ak5b.onrender.com/api/registrations/${registration._id}`,
+        `${API_BASE_URL}/registrations/${registration._id}`,
         { ticketsBooked: newQuantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -117,7 +116,7 @@ export default function RegisteredEvents() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.delete(`https://event-management-ak5b.onrender.com/api/registrations/${registrationId}`, {
+      const res = await axios.delete(`${API_BASE_URL}/registrations/${registrationId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

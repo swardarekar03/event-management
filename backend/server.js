@@ -27,6 +27,7 @@ const PORT = process.env.PORT || 5000;
 // Allowed frontend URLs
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:5174",
   "https://nexeventmanagement.vercel.app",
 ];
 
@@ -37,7 +38,13 @@ app.use(
       // Allow requests with no origin (Postman, mobile apps, etc.)
       if (!origin) return callback(null, true);
 
+      // Allow exact matches
       if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Allow all Vercel preview deployment URLs (e.g. nexeventmanagement-git-branch-xyz.vercel.app)
+      if (/\.vercel\.app$/.test(origin)) {
         return callback(null, true);
       }
 
