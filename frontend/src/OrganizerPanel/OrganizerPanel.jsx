@@ -607,13 +607,20 @@ function QRCheckin() {
     setCameraActive(false);
   };
 
+  const extractRegistrationId = (raw) => {
+    if (!raw) return raw;
+    const match = raw.trim().match(/^[a-fA-F0-9]{24}/);
+    return match ? match[0] : raw.trim();
+  };
+
   const verifyCheckin = async (id) => {
     if (!id?.trim()) return;
+    const cleanId = extractRegistrationId(id);
     setResult(null);
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
-        `${API_BASE_URL}/registrations/checkin/${id.trim()}`,
+        `${API_BASE_URL}/registrations/checkin/${cleanId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

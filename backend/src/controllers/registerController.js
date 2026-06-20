@@ -69,10 +69,14 @@ export const checkInAttendee = async (req, res) => {
     const registration = await Registration.findById(id).populate("event");
     if (!registration) return res.status(404).json({ success: false, message: "Registration not found" });
 
-    const organizerId = registration.event?.organizerId;
+    const event = registration.event;
+    const isOwner =
+      (event?.organizerId && event.organizerId.toString() === req.user.id.toString()) ||
+      (event?.organizer?.id && event.organizer.id.toString() === req.user.id.toString()) ||
+      (event?.createdBy && event.createdBy.toString() === req.user.id.toString());
 
-    // ✅ req.user.id not req.user._id — middleware sets .id
-    if (!organizerId || organizerId.toString() !== req.user.id.toString()) {
+    if (!isOwner) {
+      console.log("Checkin permission denied. organizerId:", event?.organizerId, "organizer.id:", event?.organizer?.id, "req.user.id:", req.user.id);
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
